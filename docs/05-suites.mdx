@@ -1,0 +1,169 @@
+---
+title: Traffic Suites
+description: "Detailed reference for all 7 traffic suites: web-app-attacks, api-attacks, bot-simulation, reconnaissance, ssl-scanning, javascript-exploits, and traffic-generation with scripts, tools, durations, and F5 XC feature mappings"
+sidebar:
+  order: 5
+---
+
+import { Aside } from '@astrojs/starlight/components';
+
+Each traffic suite is a directory under `/opt/traffic-generator/suites/` containing numbered shell scripts executed in order by `runner.sh`. Every script accepts the target FQDN as its first argument and writes output to both stdout and the results directory.
+
+## web-app-attacks
+
+**Tests:** OWASP Top 10 web application vulnerabilities against Juice Shop and DVWA through F5 XC.
+
+**F5 XC Feature:** WAF (Web Application Firewall)
+
+**Estimated Duration:** 12-20 minutes
+
+| Order | Script | Tools | Description |
+|---|---|---|---|
+| 01 | `01-sqli.sh` | sqlmap, curl | SQL injection payloads against Juice Shop search API and DVWA SQLi endpoint. Runs sqlmap automated scans then sends 10 direct curl-based injection payloads. |
+| 02 | `02-xss.sh` | dalfox, curl | Cross-site scripting against Juice Shop and DVWA XSS reflected/stored endpoints. Runs dalfox automated scans then sends 12 direct XSS payloads including script tags, event handlers, and cookie exfiltration. |
+| 03 | `03-command-injection.sh` | curl | OS command injection payloads against DVWA exec endpoint. Sends 12 payloads including pipe chains, semicolons, URL-encoded newlines, and reverse shell patterns. |
+| 04 | `04-path-traversal.sh` | curl | Directory traversal against multiple application endpoints. Tests standard `../` traversals, URL-encoded variants, double-encoded variants, null-byte variants, and Unicode variants across 6 endpoint paths. |
+| 05 | `05-nikto-scan.sh` | nikto | Full web server vulnerability scan with 120-second time limit. Generates diverse HTTP requests that trigger WAF signature matching. |
+| 06 | `06-nuclei-scan.sh` | nuclei | Template-based vulnerability scanning at medium, high, and critical severity levels. Rate-limited to 50 requests/second. |
+
+**Expected F5 XC Behavior:** WAF should block or flag requests containing SQL injection, XSS, command injection, and path traversal payloads. The Security Events dashboard will show violation categories, signature IDs, and request details for each blocked request.
+
+**Example Output:**
+
+```
+=== 01-sqli.sh ===
+[*] SQL Injection suite against demo.example.com
+[+] Running sqlmap against Juice Shop search API...
+[+] Sending direct SQLi payloads via curl...
+  Payload: ' OR '1'='1
+    juice-shop/search -> HTTP 403
+    dvwa/sqli          -> HTTP 403
+[*] SQL Injection suite complete
+
+=== 02-xss.sh ===
+[*] XSS suite against demo.example.com
+[+] Running dalfox against Juice Shop search...
+...
+```
+
+## api-attacks
+
+**Tests:** OWASP API Security Top 10 against VAmPI through F5 XC.
+
+**F5 XC Feature:** API Security / API Discovery
+
+**Estimated Duration:** 10-17 minutes
+
+| Order | Script | Tools | Description |
+|---|---|---|---|
+| 01 | `01-vampi-owasp-top10.sh` | curl, jq | Comprehensive OWASP API Top 10 test suite. Registers a test user, obtains an auth token, then tests BOLA (accessing other users' data), brute-force authentication, excessive data exposure, broken function-level authorization, SSRF patterns, and security misconfiguration probing. |
+| 02 | `02-sqlmap-api.sh` | sqlmap | SQL injection against VAmPI REST API endpoints: user lookup, login (POST), and register (POST) with JSON payloads. |
+| 03 | `03-arjun-param-discovery.sh` | arjun | Hidden parameter discovery across Juice Shop, DVWA, and VAmPI endpoints. Discovers undocumented query parameters that may accept injection payloads. |
+| 04 | `04-ffuf-api-fuzz.sh` | ffuf | Two-phase fuzzing: endpoint discovery using a wordlist of common API paths (api, swagger, graphql, admin, .env, .git) across all application prefixes, then HTTP method fuzzing (GET, POST, PUT, DELETE, PATCH, OPTIONS, TRACE, PROPFIND) against key endpoints. |
+
+**Expected F5 XC Behavior:** API Discovery should map the VAmPI API endpoints and identify unusual request patterns. API Security policies should flag unauthorized access attempts, injection payloads in JSON bodies, and enumeration patterns. The API Inventory in F5 XC will show discovered endpoints with request counts.
+
+**Example Output:**
+
+```
+=== 01-vampi-owasp-top10.sh ===
+[*] OWASP API Top 10 suite against VAmPI at demo.example.com
+[+] Registering test user...
+[+] Logging in as test user...
+    Token: eyJhbGciOiJIUzI1N...
+[+] API1: BOLA - Accessing other users' data...
+    GET /users/v1/admin  -> HTTP 403
+    GET /users/v1/user1  -> HTTP 403
+[+] API7: SSRF patterns...
+    SSRF http://169.254.169.254/latest/meta-data/ -> HTTP 403
+...
+```
+
+## bot-simulation
+
+**Tests:** Automated browser activity and bot-like crawling patterns through F5 XC.
+
+**F5 XC Feature:** Bot Defense
+
+**Estimated Duration:** 5-10 minutes
+
+| Order | Script | Tools | Description |
+|---|---|---|---|
+| 01 | `01-headless-chrome.sh` | playwright | Headless Chromium browsing: loads the target, navigates between application paths, extracts page titles and content, takes screenshots. Generates browser-based traffic without stealth plugins (detectable as automation). |
+| 02 | `02-puppeteer-stealth.sh` | puppeteer, puppeteer-extra-plugin-stealth | Stealth browsing using puppeteer-extra with the stealth plugin. Attempts to evade bot detection by patching navigator properties, WebGL, and other browser fingerprints. |
+| 03 | `03-rapid-crawl.sh` | curl, wget | High-frequency HTTP requests using curl and wget in rapid succession. Simulates scraper behavior with no delay between requests and aggressive User-Agent rotation. |
+| 04 | `04-form-interaction.sh` | playwright | Automated form filling and submission against DVWA login, Juice Shop registration, and VAmPI API endpoints using Playwright's form interaction APIs. |
+
+**Expected F5 XC Behavior:** Bot Defense should classify traffic as automated based on browser fingerprint analysis, request timing, and JavaScript challenge results. Headless Chrome without stealth should be detected immediately. Stealth Puppeteer tests whether advanced evasion techniques bypass detection. The Bot Defense dashboard will show bot classification categories and mitigation actions.
+
+## reconnaissance
+
+**Tests:** Network scanning, service enumeration, and directory brute-forcing against the target infrastructure.
+
+**F5 XC Feature:** WAF / Bot Defense
+
+**Estimated Duration:** 8-15 minutes
+
+| Order | Script | Tools | Description |
+|---|---|---|---|
+| 01 | `01-nmap-scan.sh` | nmap | Service version detection and default script scan against the target's HTTP/HTTPS ports. |
+| 02 | `02-masscan-sweep.sh` | masscan | High-speed port scan of common web ports (80, 443, 8080, 8443) with rate limiting. |
+| 03 | `03-gobuster-dirs.sh` | gobuster | Directory brute-forcing using SecLists common wordlist against all application prefixes. |
+| 04 | `04-subfinder-enum.sh` | subfinder, httpx | Passive subdomain enumeration for the target domain, then HTTP probing of discovered hosts. |
+| 05 | `05-whatweb-fingerprint.sh` | whatweb | Web technology fingerprinting of the target and all application paths. |
+| 06 | `06-dns-recon.sh` | dnsrecon, fierce, dig | DNS record enumeration, zone transfer attempts, and reverse lookups for the target domain. |
+
+**Expected F5 XC Behavior:** WAF should detect and log scanning activity. Bot Defense may classify rapid sequential requests as automated. The Security Events dashboard will show reconnaissance signatures and scanning tool User-Agent strings.
+
+## ssl-scanning
+
+**Tests:** TLS/SSL configuration analysis of the F5 XC load balancer's HTTPS endpoint.
+
+**F5 XC Feature:** WAF (informational)
+
+**Estimated Duration:** 3-5 minutes
+
+| Order | Script | Tools | Description |
+|---|---|---|---|
+| 01 | `01-sslscan.sh` | sslscan | Enumerates supported cipher suites, protocol versions, and certificate details. |
+| 02 | `02-sslyze.sh` | sslyze | Comprehensive TLS analysis including certificate validation, cipher suite ordering, and vulnerability checks (Heartbleed, ROBOT, etc.). |
+| 03 | `03-testssl.sh` | testssl.sh | Full TLS assessment using the testssl.sh framework. Tests protocol support, cipher preferences, header analysis, and known vulnerabilities. |
+
+**Expected F5 XC Behavior:** SSL scanning generates many TLS handshakes with unusual cipher suite proposals. While F5 XC does not typically block these, the traffic pattern is visible in access logs. The primary value is verifying that the F5 XC TLS configuration meets security best practices.
+
+## javascript-exploits
+
+**Tests:** Client-side script injection and DOM manipulation patterns that trigger Client-Side Defense detection.
+
+**F5 XC Feature:** Client-Side Defense (CSD)
+
+**Estimated Duration:** 3-5 minutes
+
+| Order | Script | Tools | Description |
+|---|---|---|---|
+| 01 | `01-inline-script-injection.sh` | curl | Sends requests containing inline JavaScript payloads designed to mimic Magecart-style credit card skimmers and data exfiltration scripts. |
+| 02 | `02-dom-manipulation.sh` | playwright | Uses headless Chromium to load the CSD demo page and inject DOM modifications: adding script tags, modifying form actions, and inserting invisible iframes that exfiltrate form data. |
+| 03 | `03-third-party-script-sim.sh` | curl, playwright | Simulates compromised third-party scripts by injecting requests that reference external JavaScript sources and attempting to load unauthorized scripts into the page context. |
+
+**Expected F5 XC Behavior:** Client-Side Defense should detect unauthorized script modifications to the protected page. The CSD dashboard will show alerts for new script sources, modified DOM elements, and data exfiltration attempts. This validates CSD Phase 2 functionality.
+
+<Aside type="note">
+The javascript-exploits suite is designed to work alongside the CSD demo application on the origin server. Ensure the origin server has the `/csd-demo/` path enabled before running this suite.
+</Aside>
+
+## traffic-generation
+
+**Tests:** High-volume legitimate HTTP traffic for baseline measurement and load testing.
+
+**F5 XC Feature:** All (baseline comparison)
+
+**Estimated Duration:** 5-10 minutes (configurable)
+
+| Order | Script | Tools | Description |
+|---|---|---|---|
+| 01 | `01-baseline-http.sh` | curl | Sequential HTTP GET requests to all application paths with standard browser User-Agent. Establishes a baseline of normal traffic in F5 XC analytics. |
+| 02 | `02-concurrent-load.sh` | curl | Parallel HTTP requests using curl with multiple concurrent connections. Tests load handling and establishes throughput baselines. |
+| 03 | `03-mixed-methods.sh` | curl | Mixed HTTP methods (GET, POST, PUT, DELETE) against API endpoints with valid payloads. Generates normal API traffic patterns for comparison with attack traffic. |
+| 04 | `04-user-journey.sh` | playwright | Simulates a realistic user journey: browsing pages, searching products, filling forms, and navigating between applications using Playwright with standard browser settings. |
+
+**Expected F5 XC Behavior:** All requests in this suite should pass through without WAF or Bot Defense intervention. Use this suite to generate "clean" traffic in the analytics dashboard, then compare with attack suite traffic to demonstrate the difference between legitimate and malicious request patterns.

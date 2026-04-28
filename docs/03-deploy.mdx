@@ -1,0 +1,247 @@
+---
+title: Deploy
+description: "Complete Terraform deployment walkthrough for the traffic generator Azure VM: clone, configure terraform.tfvars, apply, wait for cloud-init provisioning (15-25 minutes), and verify all 50+ security tools are installed and operational"
+sidebar:
+  order: 3
+---
+
+## Directory Setup
+
+Clone the repository and enter the working directory:
+
+```bash
+git clone https://github.com/f5xc-salesdemos/traffic-generator.git
+cd traffic-generator
+```
+
+## Terraform Configuration
+
+### Variables
+
+The following variables control the deployment. Only `subscription_id` and `target_fqdn` are required:
+
+```hcl
+variable "subscription_id" {
+  description = "Azure subscription ID"
+  type        = string
+}
+
+variable "target_fqdn" {
+  description = "Target FQDN (F5 XC load balancer domain)"
+  type        = string
+}
+
+variable "resource_group_name" {
+  description = "Name for the Azure resource group"
+  type        = string
+  default     = "rg-traffic-generator"
+}
+
+variable "location" {
+  description = "Azure region for all resources"
+  type        = string
+  default     = "eastus2"
+}
+
+variable "vm_size" {
+  description = "Azure VM size (Standard_D4s_v3 provides 4 vCPU, 16 GiB RAM)"
+  type        = string
+  default     = "Standard_D4s_v3"
+}
+
+variable "admin_username" {
+  description = "SSH admin username for the VM"
+  type        = string
+  default     = "azureuser"
+}
+
+variable "ssh_public_key_path" {
+  description = "Path to the SSH public key file"
+  type        = string
+  default     = "~/.ssh/id_ed25519.pub"
+}
+
+variable "target_origin_ip" {
+  description = "Direct origin IP for baseline testing (bypasses F5 XC)"
+  type        = string
+  default     = ""
+}
+
+variable "install_tier" {
+  description = "Installation tier: standard or full (adds ZAP and Metasploit)"
+  type        = string
+  default     = "standard"
+}
+
+variable "environment_tag" {
+  description = "Environment tag applied to all resources"
+  type        = string
+  default     = "lab"
+}
+```
+
+### Configure Variables
+
+Copy the example variables file and fill in your values:
+
+```bash
+cp terraform.tfvars.example terraform.tfvars
+```
+
+Edit `terraform.tfvars`:
+
+```hcl
+subscription_id     = "00000000-0000-0000-0000-000000000000"
+target_fqdn         = "demo.example.com"
+resource_group_name = "rg-traffic-generator"
+location            = "eastus2"
+vm_size             = "Standard_D4s_v3"
+admin_username      = "azureuser"
+ssh_public_key_path = "~/.ssh/id_ed25519.pub"
+install_tier        = "standard"
+environment_tag     = "lab"
+```
+
+Replace `subscription_id` with your Azure subscription ID (from `az account show --query id -o tsv`) and `target_fqdn` with your F5 XC load balancer domain.
+
+### Cloud-Init Summary
+
+The VM is provisioned via cloud-init, which performs the following steps:
+
+1. **System update** -- `apt-get update && apt-get upgrade`
+2. **APT packages** -- Installs nikto, nmap, masscan, sqlmap, hydra, medusa, ncrack, tshark, hping3, tcpdump, netcat, ngrep, iperf3, mtr, sslscan, socat, dirb, whatweb, whois, dnsutils, and supporting libraries
+3. **Node.js 20.x** -- Via NodeSource APT repository for Puppeteer and Playwright
+4. **Python tooling** -- Installs `uv` for fast Python package management
+5. **GitHub Releases** -- Downloads latest binaries for nuclei, dalfox, ffuf, gobuster, feroxbuster, subfinder, httpx, amass via `ghlatest.sh` and `install-release.sh`
+6. **Python packages** -- Installs mitmproxy, sslyze, dnsrecon, fierce, theHarvester, playwright, scapy, impacket, arjun, pwntools, hashid via `uv` and `pip`
+7. **npm packages** -- Installs puppeteer and puppeteer-extra-plugin-stealth globally
+8. **Git clones** -- Clones testssl.sh, recon-ng, spiderfoot, SecLists to `/opt/`
+9. **Browser install** -- `playwright install chromium` for headless browser automation
+10. **Suite deployment** -- Copies traffic suites and runner.sh to `/opt/traffic-generator/`
+11. **Config file** -- Writes `config.env` with `TARGET_FQDN` and `TARGET_ORIGIN_IP`
+12. **Status file** -- Writes `/opt/traffic-generator/status.json` on completion
+13. **Full tier (optional)** -- Installs ZAP and Metasploit if `install_tier = "full"`
+
+## Deploy
+
+Initialize Terraform and apply:
+
+```bash
+terraform init
+
+terraform plan
+
+terraform apply
+```
+
+Terraform outputs the public IP, SSH command, and target FQDN after successful deployment.
+
+## Post-Deploy Verification
+
+Cloud-init provisioning takes **15-20 minutes for standard tier** and **approximately 25 minutes for full tier**. The VM is accessible via SSH immediately, but tools are still being installed until cloud-init completes.
+
+### Wait for Cloud-Init
+
+SSH into the VM and wait for provisioning to finish:
+
+```bash
+ssh azureuser@$(terraform output -raw public_ip)
+
+# Wait for cloud-init to complete (blocks until done)
+cloud-init status --wait
+```
+
+Expected output when complete:
+
+```
+status: done
+```
+
+### Check Status File
+
+The cloud-init script writes a status file upon completion:
+
+```bash
+cat /opt/traffic-generator/status.json
+```
+
+Expected output:
+
+```json
+{
+  "status": "ready",
+  "tier": "standard",
+  "target_fqdn": "demo.example.com",
+  "completed": "2026-04-25T14:30:00Z",
+  "tools_installed": true
+}
+```
+
+### Verify Critical Tools
+
+Run a verification loop to confirm each critical tool is available on PATH:
+
+```bash
+for tool in nikto sqlmap nuclei dalfox ffuf gobuster feroxbuster nmap masscan \
+  hydra medusa ncrack sslscan tshark hping3 mitmproxy sslyze subfinder httpx \
+  amass arjun mtr whatweb dirb socat netcat ngrep iperf3 whois dig; do
+  if command -v "$tool" > /dev/null 2>&1; then
+    echo "OK: $tool"
+  else
+    echo "MISSING: $tool"
+  fi
+done
+```
+
+Verify browser automation:
+
+```bash
+# Playwright
+playwright --version
+
+# Puppeteer (via Node.js)
+node -e "require('puppeteer')" && echo "OK: puppeteer"
+
+# Chromium
+chromium-browser --version 2>/dev/null || chromium --version 2>/dev/null
+```
+
+Verify git-cloned tools:
+
+```bash
+ls /opt/testssl.sh/testssl.sh && echo "OK: testssl.sh"
+ls /opt/recon-ng/recon-ng && echo "OK: recon-ng"
+ls /opt/spiderfoot/sf.py && echo "OK: spiderfoot"
+ls /opt/SecLists/README.md && echo "OK: SecLists"
+```
+
+### Verify Suite Runner
+
+Confirm the runner and suites are installed:
+
+```bash
+ls /opt/traffic-generator/suites/runner.sh
+ls /opt/traffic-generator/suites/*/
+
+# Dry-run a suite to verify structure
+/opt/traffic-generator/suites/runner.sh web-app-attacks --dry-run
+```
+
+## Terraform Outputs
+
+| Output | Description | Example |
+|---|---|---|
+| `public_ip` | Public IP address of the traffic generator VM | `20.12.78.200` |
+| `ssh_command` | SSH command to connect to the VM | `ssh azureuser@20.12.78.200` |
+| `target_fqdn` | Configured target FQDN for traffic suites | `demo.example.com` |
+| `status_check` | Command to check provisioning status | `ssh azureuser@20.12.78.200 cat /opt/traffic-generator/status.json` |
+| `resource_group` | Resource group containing all resources | `rg-traffic-generator` |
+
+Retrieve any output:
+
+```bash
+terraform output -raw public_ip
+terraform output -raw ssh_command
+```
+
+Proceed to [Tool Catalog](../04-tool-catalog/) for the full tool reference or [Suites](../05-suites/) to start generating traffic.

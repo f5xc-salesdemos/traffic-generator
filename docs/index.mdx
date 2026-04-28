@@ -1,0 +1,60 @@
+---
+title: Traffic Generator
+description: "Azure Ubuntu 24.04 VM pre-loaded with security testing tools for WAF, Bot Defense, API Security, and Client-Side Defense validation against F5 Distributed Cloud"
+template: splash
+hero:
+  tagline: Deploy a traffic generation VM with 50+ security tools, organized attack suites, and headless Chrome automation for comprehensive F5 XC demo validation.
+  actions:
+    - text: Get Started
+      link: /traffic-generator/01-architecture/
+      icon: right-arrow
+      variant: primary
+    - text: Deploy Now
+      link: /traffic-generator/03-deploy/
+      icon: rocket
+      variant: minimal
+---
+
+import { CardGrid } from '@astrojs/starlight/components';
+import LinkCard from '@f5xc-salesdemos/docs-theme/components/LinkCard.astro';
+
+## What This Provides
+
+The Traffic Generator is a purpose-built Azure VM that produces realistic attack traffic, reconnaissance scans, bot simulation, and API abuse patterns against an F5 Distributed Cloud HTTP load balancer. It validates that WAF policies, Bot Defense, API Security, and Client-Side Defense are correctly configured by generating the exact traffic those features are designed to detect and block.
+
+All tools are pre-installed via cloud-init during Terraform provisioning. Traffic is organized into suites that can be run individually or in sequence using the included `runner.sh` orchestrator.
+
+## Traffic Suite Categories
+
+| Suite | Description | F5 XC Feature Validated |
+|---|---|---|
+| [web-app-attacks](/traffic-generator/05-suites/#web-app-attacks) | SQL injection, XSS, command injection, path traversal, Nikto, Nuclei | WAF |
+| [api-attacks](/traffic-generator/05-suites/#api-attacks) | OWASP API Top 10, SQLMap API mode, parameter discovery, endpoint fuzzing | API Security |
+| [bot-simulation](/traffic-generator/05-suites/#bot-simulation) | Headless Chrome, Puppeteer stealth, Playwright automation, rapid crawling | Bot Defense |
+| [reconnaissance](/traffic-generator/05-suites/#reconnaissance) | Nmap, Masscan, Gobuster, Subfinder, directory brute-forcing | WAF / Bot Defense |
+| [ssl-scanning](/traffic-generator/05-suites/#ssl-scanning) | SSLScan, sslyze, testssl.sh TLS configuration analysis | WAF |
+| [javascript-exploits](/traffic-generator/05-suites/#javascript-exploits) | DOM manipulation, inline script injection, Magecart-style skimming payloads | Client-Side Defense |
+| [traffic-generation](/traffic-generator/05-suites/#traffic-generation) | High-volume legitimate HTTP traffic for baseline and load testing | All |
+
+<CardGrid>
+  <LinkCard
+    title="Architecture"
+    description="VM layout, tool categories, tiered installation, and integration points with origin-server and F5 XC."
+    href="01-architecture/"
+  />
+  <LinkCard
+    title="Deploy"
+    description="Complete Terraform walkthrough: clone, configure, apply, and verify all tools are operational."
+    href="03-deploy/"
+  />
+  <LinkCard
+    title="Tool Catalog"
+    description="Every installed tool organized by category with install method, example commands, and suite mappings."
+    href="04-tool-catalog/"
+  />
+  <LinkCard
+    title="Suite Reference"
+    description="Detailed description of each traffic suite, scripts, tools used, and expected F5 XC detection results."
+    href="05-suites/"
+  />
+</CardGrid>

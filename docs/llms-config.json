@@ -1,0 +1,21 @@
+{
+  "customSets": [
+    {
+      "label": "Traffic Suites",
+      "description": "Attack traffic suite scripts and runner usage",
+      "paths": ["05-suites*", "06-runner*"]
+    },
+    {
+      "label": "Tool Catalog",
+      "description": "Complete catalog of installed security tools",
+      "paths": ["04-tool-catalog*"]
+    },
+    {
+      "label": "Integration",
+      "description": "Integration with F5 XC, origin-server, and CSD demo",
+      "paths": ["07-integrate*"]
+    }
+  ],
+  "promote": ["index*", "01-architecture*", "03-deploy*", "05-suites*", "06-runner*"],
+  "demote": ["08-teardown*"]
+}

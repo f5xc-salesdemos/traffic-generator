@@ -1,0 +1,21 @@
+#!/bin/bash
+# Nuclei vulnerability scanner
+# Tools: nuclei
+# Targets: Medium, high, and critical severity templates
+# Estimated duration: 3-5 minutes
+set -euo pipefail
+
+TARGET="${1:?Usage: 06-nuclei-scan.sh <TARGET_FQDN>}"
+
+echo "[*] Nuclei scan against ${TARGET}"
+echo ""
+
+nuclei -u "${TARGET_PROTOCOL:-http}://${TARGET}" \
+  -severity medium,high,critical \
+  -timeout 5 \
+  -rate-limit 50 \
+  -silent \
+  || echo "WARN: nuclei exited with non-zero status"
+
+echo ""
+echo "[*] Nuclei scan complete"

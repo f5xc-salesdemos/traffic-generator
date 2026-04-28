@@ -1,0 +1,123 @@
+#!/usr/bin/env node
+// Rapid page navigation simulation (bot behavior)
+// Tools: playwright
+// Targets: Various application pages at high speed
+// Estimated duration: 1-2 minutes
+
+const { chromium } = require('playwright');
+const path = require('path');
+const fs = require('fs');
+const PROFILE_DIR = `/tmp/pw-profile-${path.basename(__filename, '.js')}-${process.pid}`;
+process.on('exit', () => { try { fs.rmSync(PROFILE_DIR, { recursive: true, force: true }); } catch {} });
+
+const TARGET_FQDN = process.argv[2];
+if (!TARGET_FQDN) {
+  console.error('Usage: 04-rapid-browsing.js <TARGET_FQDN>');
+  process.exit(1);
+}
+
+const BASE_URL = `${process.env.TARGET_PROTOCOL || 'http'}://${TARGET_FQDN}`;
+
+// Pages to hit rapidly
+const PAGES = [
+  '/juice-shop/',
+  '/juice-shop/#/search',
+  '/juice-shop/#/login',
+  '/juice-shop/#/register',
+  '/juice-shop/#/about',
+  '/juice-shop/#/contact',
+  '/juice-shop/#/recycle',
+  '/juice-shop/#/complain',
+  '/juice-shop/#/basket',
+  '/juice-shop/#/order-completion',
+  '/juice-shop/#/track-result',
+  '/juice-shop/#/score-board',
+  '/dvwa/',
+  '/dvwa/login.php',
+  '/dvwa/vulnerabilities/sqli/',
+  '/dvwa/vulnerabilities/xss_r/',
+  '/dvwa/vulnerabilities/exec/',
+  '/vampi/',
+  '/vampi/users/v1',
+  '/vampi/users/v1/login',
+  '/juice-shop/rest/products/search?q=',
+  '/juice-shop/api/Users/',
+  '/juice-shop/api/Products/',
+  '/juice-shop/api/Feedbacks/',
+];
+
+// Rotating user agents
+const USER_AGENTS = [
+  'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+  'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Safari/605.1.15',
+  'Mozilla/5.0 (X11; Linux x86_64; rv:121.0) Gecko/20100101 Firefox/121.0',
+  'Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)',
+  'Mozilla/5.0 (compatible; bingbot/2.0; +http://www.bing.com/bingbot.htm)',
+  'curl/8.0.0',
+  'python-requests/2.31.0',
+  'Go-http-client/2.0',
+  'Java/17.0.1',
+  'Wget/1.21',
+  'Scrapy/2.11',
+  'axios/1.6.0',
+  'httpx/0.25.0',
+  'Apache-HttpClient/4.5.14',
+  'okhttp/4.12.0',
+];
+
+(async () => {
+  console.log(`[*] Rapid browsing simulation against ${TARGET_FQDN}`);
+  console.log(`[*] Hitting ${PAGES.length} pages with ${USER_AGENTS.length} user agents`);
+  console.log('');
+
+  const browser = await chromium.launch({
+    headless: true,
+    args: ['--no-sandbox', '--disable-setuid-sandbox', '--ignore-certificate-errors'],
+  });
+
+  let visited = 0;
+  let errors = 0;
+  const startTime = Date.now();
+
+  for (const ua of USER_AGENTS) {
+    const context = await browser.newContext({
+      ignoreHTTPSErrors: true,
+      userAgent: ua,
+    });
+    const page = await context.newPage();
+
+    const uaShort = ua.length > 40 ? ua.substring(0, 40) + '...' : ua;
+    console.log(`[+] UA: ${uaShort}`);
+
+    for (const path of PAGES) {
+      try {
+        const url = `${BASE_URL}${path}`;
+        const response = await page.goto(url, {
+          waitUntil: 'domcontentloaded',
+          timeout: 5000,
+        });
+        const status = response ? response.status() : 'N/A';
+        console.log(`    ${path} -> ${status}`);
+        visited++;
+      } catch (err) {
+        console.log(`    ${path} -> ERR: ${err.message.substring(0, 60)}`);
+        errors++;
+      }
+      // Minimal delay between requests (bot behavior)
+      await page.waitForTimeout(50).catch(() => {});
+    }
+
+    await context.close().catch(() => {});
+    console.log('');
+  }
+
+  await browser.close();
+  fs.rmSync(PROFILE_DIR, { recursive: true, force: true });
+
+  const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
+  const rate = (visited / elapsed * 1).toFixed(1);
+
+  console.log('[*] Rapid browsing simulation complete');
+  console.log(`    Pages visited: ${visited} | Errors: ${errors}`);
+  console.log(`    Duration: ${elapsed}s | Rate: ${rate} req/s`);
+})();
