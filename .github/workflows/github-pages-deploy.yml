@@ -19,5 +19,123 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  docs:
-    uses: f5xc-salesdemos/docs-control/.github/workflows/github-pages-deploy.yml@main
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      packages: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Login to GHCR
+        uses: docker/login-action@4907a6ddec9925e35a0a9e82d7399ccc52663121 # v4.1.0
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Stage imported files for documentation
+        run: |
+          CONTENT="docs"
+          IMPORTS="${CONTENT}/_imports"
+          DATA_DIR="${CONTENT}/_data"
+          if [ -f "$IMPORTS" ]; then
+            mkdir -p "$DATA_DIR"
+            while IFS= read -r file; do
+              [ -z "$file" ] || [ "${file:0:1}" = "#" ] && continue
+              if [ -f "$file" ]; then
+                cp "$file" "$DATA_DIR/"
+                echo "Staged: $file"
+              fi
+            done < "$IMPORTS"
+          fi
+
+      - name: Build docs with terraform mount
+        env:
+          DOCS_SITE: "https://f5xc-salesdemos.github.io"
+          GITHUB_REPO: ${{ github.repository }}
+        run: |
+          mkdir -p "${{ runner.temp }}/docs-output"
+          chmod 777 "${{ runner.temp }}/docs-output"
+
+          docker run --rm \
+            --name docs-builder \
+            -v "${{ github.workspace }}/docs:/content/docs:ro" \
+            -v "${{ github.workspace }}/terraform:/content/terraform:ro" \
+            -v "${{ runner.temp }}/docs-output:/output" \
+            -e CONTENT_DIR=/content/docs \
+            -e OUTPUT_DIR=/output \
+            -e DOCS_SITE="${DOCS_SITE}" \
+            -e GITHUB_REPOSITORY="${GITHUB_REPO}" \
+            ghcr.io/f5xc-salesdemos/docs-builder:latest
+
+          echo "Build completed"
+          ls -lah "${{ runner.temp }}/docs-output/"
+
+      - name: Verify build output
+        run: |
+          OUTPUT_DIR="${{ runner.temp }}/docs-output"
+          if [ ! -d "$OUTPUT_DIR" ] || [ -z "$(ls -A $OUTPUT_DIR)" ]; then
+            echo "Build output is empty"
+            exit 1
+          fi
+          echo "Build output verified"
+
+      - name: Stage governance assets
+        run: |
+          OUTPUT_DIR="${{ runner.temp }}/docs-output"
+          API_DIR="${OUTPUT_DIR}/api"
+          mkdir -p "${API_DIR}/files"
+
+          for src in \
+              .github/config/repo-settings.json \
+              .github/config/managed-files-manifest.json \
+              .github/config/docs-sites.json \
+              README.md.tpl; do
+            [ -f "$src" ] || continue
+            dest="${API_DIR}/$(basename "$src")"
+            cp "$src" "$dest"
+            echo "Published: /api/$(basename "$src")"
+          done
+
+          MANIFEST=".github/config/managed-files-manifest.json"
+          if [ -f "$MANIFEST" ]; then
+            mapfile -t FILES < <(jq -r '.files | keys[]' "$MANIFEST")
+            for dest in "${FILES[@]}"; do
+              if [ -f "$dest" ]; then
+                target="${API_DIR}/files/${dest}"
+                mkdir -p "$(dirname "$target")"
+                cp "$dest" "$target"
+                echo "Published: /api/files/${dest}"
+              fi
+            done
+          fi
+
+          jq -n \
+            --arg commit "${GITHUB_SHA}" \
+            --arg generated_at "$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
+            '{commit:$commit, generated_at:$generated_at}' \
+            > "${API_DIR}/revision.json"
+
+          touch "${OUTPUT_DIR}/.nojekyll"
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9 # v5.0.0
+        with:
+          path: ${{ runner.temp }}/docs-output
+          retention-days: 1
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    if: success()
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deploy
+        uses: actions/deploy-pages@d6db90164ac5ed86f2b6aed7e0febac5b3c0c03e # v4.0.5
