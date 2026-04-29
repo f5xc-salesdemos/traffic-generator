@@ -15,8 +15,8 @@ fi
 echo "[*] sslscan against ${TARGET}"
 echo ""
 
-sslscan "$TARGET" \
-  || echo "WARN: sslscan exited with non-zero status"
+sslscan "$TARGET" ||
+  echo "WARN: sslscan exited with non-zero status"
 
 echo ""
 echo "[*] sslscan complete"

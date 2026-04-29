@@ -3,7 +3,7 @@
 **Date**: 2026-04-27
 **CDN Simulator**: 20.65.90.112 (F32s_v2, 32 vCPU)
 **Traffic Generator**: 20.114.199.194 (varied per test)
-**Benchmark**: bench-keepalive.sh (all persistent connections, no curl loops, no thundering herd)
+**Benchmark**: bench-keepalive.sh (all persistent connections, no cURL loops, no thundering herd)
 
 ---
 

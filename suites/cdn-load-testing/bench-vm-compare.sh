@@ -40,7 +40,7 @@ FILE_MAX=$((NCPU * 262144))
 TW_BUCKETS=$((NCPU * 250000))
 
 # Scale TCP buffers with RAM (use 1/4 of RAM for networking max)
-NET_MEM_MAX=$(( (TOTAL_RAM_MB / 4) * 1024 * 1024 ))
+NET_MEM_MAX=$(((TOTAL_RAM_MB / 4) * 1024 * 1024))
 [ "$NET_MEM_MAX" -gt 67108864 ] && NET_MEM_MAX=67108864
 
 sudo sysctl -w net.core.somaxconn=$SOMAXCONN >/dev/null 2>&1
@@ -79,7 +79,7 @@ else
 fi
 
 # --- RPS/RFS: distribute NIC softirqs across ALL cores ---
-RPS_MASK=$(printf '%x' $(( (1 << NCPU) - 1 )))
+RPS_MASK=$(printf '%x' $(((1 << NCPU) - 1)))
 NIC=$(ip -o link show | awk -F': ' '/state UP/ && !/lo/{print $2; exit}')
 RPS_STATUS="N/A"
 if [ -n "$NIC" ]; then
@@ -197,7 +197,7 @@ T1_TOTAL_RPS=0
 for ep in "${ENDPOINTS[@]}"; do
   wrk -t"$WRK_THREADS" -c"$WRK_CONNS_PER_EP" -d"${DURATION}s" --timeout 10s \
     -H "X-Forwarded-For: 198.51.100.$((RANDOM % 256))" \
-    "${BASE}${ep}" > "$RESULTS/wrk-static-$(echo "$ep" | tr '/' '_').log" 2>&1 &
+    "${BASE}${ep}" >"$RESULTS/wrk-static-$(echo "$ep" | tr '/' '_').log" 2>&1 &
 done
 wait
 
@@ -230,7 +230,7 @@ echo "=== TEST 2: wrk LUA RANDOMIZED (realistic CDN traffic) ==="
 
 if [ -f "$LUA_SCRIPT" ]; then
   wrk -t"$WRK_THREADS" -c"$((WRK_CONNS_PER_EP * 4))" -d"${DURATION}s" --timeout 10s \
-    -s "$LUA_SCRIPT" "${BASE}/" > "$RESULTS/wrk-lua.log" 2>&1
+    -s "$LUA_SCRIPT" "${BASE}/" >"$RESULTS/wrk-lua.log" 2>&1
   T2_RPS=$(grep "Requests/sec" "$RESULTS/wrk-lua.log" 2>/dev/null | awk '{printf "%.0f", $2}')
   T2_LAT=$(grep "Latency" "$RESULTS/wrk-lua.log" 2>/dev/null | awk '{print $2}')
   T2_XFER=$(grep "Transfer/sec" "$RESULTS/wrk-lua.log" 2>/dev/null | awk '{print $2}')
@@ -253,7 +253,7 @@ echo "=== TEST 3: hey GOROUTINE THROUGHPUT ==="
 for ep in "/juice-shop/" "/httpbin/get" "/whoami/" "/vampi/users/v1"; do
   hey -z "${DURATION}s" -c "$HEY_CONNS" -t 10 \
     -H "X-Forwarded-For: 203.0.113.$((RANDOM % 256))" \
-    "${BASE}${ep}" > "$RESULTS/hey-$(echo "$ep" | tr '/' '_').log" 2>&1 &
+    "${BASE}${ep}" >"$RESULTS/hey-$(echo "$ep" | tr '/' '_').log" 2>&1 &
 done
 wait
 
@@ -279,8 +279,8 @@ echo "=== TEST 4: vegeta CONSTANT-RATE (find max sustainable rate) ==="
 
 for rate_mult in 1 2 4; do
   RATE=$((VEGETA_RATE * rate_mult))
-  echo "GET ${BASE}/httpbin/get" | vegeta attack -rate="${RATE}/s" -duration=30s -timeout=10s 2>/dev/null \
-    | vegeta report > "$RESULTS/vegeta-${RATE}rps.log" 2>&1
+  echo "GET ${BASE}/httpbin/get" | vegeta attack -rate="${RATE}/s" -duration=30s -timeout=10s 2>/dev/null |
+    vegeta report >"$RESULTS/vegeta-${RATE}rps.log" 2>&1
   SUCCESS=$(grep "Success" "$RESULTS/vegeta-${RATE}rps.log" 2>/dev/null | awk '{print $3}')
   ACTUAL_RATE=$(grep "Requests" "$RESULTS/vegeta-${RATE}rps.log" 2>/dev/null | awk '{printf "%.0f", $3}')
   P99=$(grep "99th" "$RESULTS/vegeta-${RATE}rps.log" 2>/dev/null | awk '{print $2}')
@@ -301,14 +301,14 @@ ALL_PIDS=""
 for ep in "/juice-shop/" "/httpbin/get" "/whoami/" "/health" "/dvwa/login.php" "/vampi/users/v1" "/csd-demo/health"; do
   wrk -t"$WRK_THREADS" -c"$WRK_CONNS_PER_EP" -d"${KRAKEN_DUR}s" --timeout 10s \
     -H "X-Forwarded-For: 192.0.2.$((RANDOM % 256))" \
-    "${BASE}${ep}" > "$RESULTS/kraken-wrk-$(echo "$ep" | tr '/' '_').log" 2>&1 &
+    "${BASE}${ep}" >"$RESULTS/kraken-wrk-$(echo "$ep" | tr '/' '_').log" 2>&1 &
   ALL_PIDS="$ALL_PIDS $!"
 done
 
 # wrk Lua
 if [ -f "$LUA_SCRIPT" ]; then
   wrk -t"$WRK_THREADS" -c"$((WRK_CONNS_PER_EP * 2))" -d"${KRAKEN_DUR}s" --timeout 10s \
-    -s "$LUA_SCRIPT" "${BASE}/" > "$RESULTS/kraken-wrk-lua.log" 2>&1 &
+    -s "$LUA_SCRIPT" "${BASE}/" >"$RESULTS/kraken-wrk-lua.log" 2>&1 &
   ALL_PIDS="$ALL_PIDS $!"
 fi
 
@@ -316,21 +316,21 @@ fi
 for ep in "/juice-shop/" "/httpbin/get" "/whoami/" "/vampi/users/v1"; do
   hey -z "${KRAKEN_DUR}s" -c "$HEY_CONNS" -t 10 \
     -H "X-Forwarded-For: 198.51.100.$((RANDOM % 256))" \
-    "${BASE}${ep}" > "$RESULTS/kraken-hey-$(echo "$ep" | tr '/' '_').log" 2>&1 &
+    "${BASE}${ep}" >"$RESULTS/kraken-hey-$(echo "$ep" | tr '/' '_').log" 2>&1 &
   ALL_PIDS="$ALL_PIDS $!"
 done
 
 # vegeta
 for ep in "/juice-shop/" "/httpbin/get" "/dvwa/login.php"; do
-  echo "GET ${BASE}${ep}" | vegeta attack -rate="${VEGETA_RATE}/s" -duration="${KRAKEN_DUR}s" -timeout=10s 2>/dev/null \
-    | vegeta encode > "$RESULTS/kraken-vegeta-$(echo "$ep" | tr '/' '_').bin" &
+  echo "GET ${BASE}${ep}" | vegeta attack -rate="${VEGETA_RATE}/s" -duration="${KRAKEN_DUR}s" -timeout=10s 2>/dev/null |
+    vegeta encode >"$RESULTS/kraken-vegeta-$(echo "$ep" | tr '/' '_').bin" &
   ALL_PIDS="$ALL_PIDS $!"
 done
 
 # ab
 ab -n 999999 -c "$AB_CONNS" -k -t "$KRAKEN_DUR" -s 10 \
   -H "X-Forwarded-For: 203.0.113.$((RANDOM % 256))" \
-  "${BASE}/juice-shop/" > "$RESULTS/kraken-ab.log" 2>&1 &
+  "${BASE}/juice-shop/" >"$RESULTS/kraken-ab.log" 2>&1 &
 ALL_PIDS="$ALL_PIDS $!"
 
 # Monitor during kraken

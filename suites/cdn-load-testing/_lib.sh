@@ -165,13 +165,13 @@ rand_csd_demo_path() {
 rand_any_path() {
   local app=$((RANDOM % 7))
   case $app in
-    0) rand_juice_shop_path ;;
-    1) rand_dvwa_path ;;
-    2) rand_vampi_path ;;
-    3) rand_httpbin_path ;;
-    4) rand_csd_demo_path ;;
-    5) echo "/whoami/" ;;
-    6) echo "/health" ;;
+  0) rand_juice_shop_path ;;
+  1) rand_dvwa_path ;;
+  2) rand_vampi_path ;;
+  3) rand_httpbin_path ;;
+  4) rand_csd_demo_path ;;
+  5) echo "/whoami/" ;;
+  6) echo "/health" ;;
   esac
 }
 
@@ -219,9 +219,18 @@ PASS_COUNT=0
 FAIL_COUNT=0
 VULN_COUNT=0
 
-pass() { echo "    [PASS] $*"; PASS_COUNT=$((PASS_COUNT + 1)); }
-fail() { echo "    [FAIL] $*"; FAIL_COUNT=$((FAIL_COUNT + 1)); }
-vuln() { echo "    [VULN] $*"; VULN_COUNT=$((VULN_COUNT + 1)); }
+pass() {
+  echo "    [PASS] $*"
+  PASS_COUNT=$((PASS_COUNT + 1))
+}
+fail() {
+  echo "    [FAIL] $*"
+  FAIL_COUNT=$((FAIL_COUNT + 1))
+}
+vuln() {
+  echo "    [VULN] $*"
+  VULN_COUNT=$((VULN_COUNT + 1))
+}
 
 summary() {
   echo ""

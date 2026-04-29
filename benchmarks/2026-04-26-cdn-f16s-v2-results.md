@@ -64,7 +64,7 @@
 ## Round 2: Keepalive-Optimized (CDN team recommendation)
 
 CDN team identified that 65-72% of CDN CPU was spent on TCP connection setup/teardown.
-Redesigned benchmark: fewer persistent connections, explicit keepalive, no curl loops.
+Redesigned benchmark: fewer persistent connections, explicit keepalive, no cURL loops.
 
 ### Test A: F16s_v2 Keepalive (16 vCPU, 32 GiB)
 

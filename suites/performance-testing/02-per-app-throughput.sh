@@ -77,7 +77,7 @@ for app in health landing juice-shop juice-shop-api dvwa vampi vampi-api httpbin
       --max-time 10 --connect-timeout 5 "$url" 2>/dev/null)
 
     end_time=$(date +%s%N)
-    wall_ms=$(( (end_time - start_time) / 1000000 ))
+    wall_ms=$(((end_time - start_time) / 1000000))
 
     total=$(echo "$results" | grep -c . || echo 0)
     ok=$(echo "$results" | grep -c '^[23]0[0-9] ' || true)

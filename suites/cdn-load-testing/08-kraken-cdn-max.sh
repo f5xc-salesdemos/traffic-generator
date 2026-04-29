@@ -38,19 +38,19 @@ if command -v wrk >/dev/null 2>&1; then
       -H "X-Forwarded-For: $(rand_ip)" \
       -H "Accept-Encoding: $(rand_encoding)" \
       -H "User-Agent: $(rand_ua)" \
-      "${BASE}${ep}" > "$RESULTS_DIR/wrk-$(echo "$ep" | tr '/' '_').log" 2>&1 &
+      "${BASE}${ep}" >"$RESULTS_DIR/wrk-$(echo "$ep" | tr '/' '_').log" 2>&1 &
     WRK_PIDS="$WRK_PIDS $!"
     echo "[+] wrk: $ep (PID $!, 4t/500c)"
   done
   # Combined Lua-randomized instance
   if [ -f "$LUA_BASELINE" ]; then
-    wrk -t4 -c500 -d"${DURATION}s" --timeout 10s -s "$LUA_BASELINE" "${BASE}/" > "$RESULTS_DIR/wrk-lua-baseline.log" 2>&1 &
+    wrk -t4 -c500 -d"${DURATION}s" --timeout 10s -s "$LUA_BASELINE" "${BASE}/" >"$RESULTS_DIR/wrk-lua-baseline.log" 2>&1 &
     WRK_PIDS="$WRK_PIDS $!"
     echo "[+] wrk Lua-randomized: all paths (PID $!, 4t/500c)"
   fi
   # Multi-client Lua instance
   if [ -f "$LUA_MULTI" ]; then
-    wrk -t4 -c500 -d"${DURATION}s" --timeout 10s -s "$LUA_MULTI" "${BASE}/" > "$RESULTS_DIR/wrk-lua-multi.log" 2>&1 &
+    wrk -t4 -c500 -d"${DURATION}s" --timeout 10s -s "$LUA_MULTI" "${BASE}/" >"$RESULTS_DIR/wrk-lua-multi.log" 2>&1 &
     WRK_PIDS="$WRK_PIDS $!"
     echo "[+] wrk Lua-multi-client: vendor headers (PID $!, 4t/500c)"
   fi
@@ -63,14 +63,18 @@ echo ""
 echo "=== LAYER 2: hey SUSTAINED (diverse clients) ==="
 HEY_PIDS=""
 if command -v hey >/dev/null 2>&1; then
-  hey -z "${DURATION}s" -c 200 -H "X-Forwarded-For: $(rand_ip)" -H "Accept-Encoding: $(rand_encoding)" "${BASE}/juice-shop/" > "$RESULTS_DIR/hey-juice-shop.log" 2>&1 &
-  HEY_PIDS="$HEY_PIDS $!"; echo "[+] hey: /juice-shop/ (PID $!, 200c)"
-  hey -z "${DURATION}s" -c 200 -H "X-Forwarded-For: $(rand_ip)" -H "Accept-Encoding: $(rand_encoding)" "${BASE}/juice-shop/rest/products/search?q=apple" > "$RESULTS_DIR/hey-juice-api.log" 2>&1 &
-  HEY_PIDS="$HEY_PIDS $!"; echo "[+] hey: /juice-shop/rest/products/search (PID $!, 200c)"
-  hey -z "${DURATION}s" -c 200 -H "X-Forwarded-For: $(rand_ip)" -H "Accept-Encoding: $(rand_encoding)" "${BASE}/httpbin/get" > "$RESULTS_DIR/hey-httpbin.log" 2>&1 &
-  HEY_PIDS="$HEY_PIDS $!"; echo "[+] hey: /httpbin/get (PID $!, 200c)"
-  hey -z "${DURATION}s" -c 200 -H "X-Forwarded-For: $(rand_ip)" -H "Accept-Encoding: $(rand_encoding)" "${BASE}/vampi/users/v1" > "$RESULTS_DIR/hey-vampi.log" 2>&1 &
-  HEY_PIDS="$HEY_PIDS $!"; echo "[+] hey: /vampi/users/v1 (PID $!, 200c)"
+  hey -z "${DURATION}s" -c 200 -H "X-Forwarded-For: $(rand_ip)" -H "Accept-Encoding: $(rand_encoding)" "${BASE}/juice-shop/" >"$RESULTS_DIR/hey-juice-shop.log" 2>&1 &
+  HEY_PIDS="$HEY_PIDS $!"
+  echo "[+] hey: /juice-shop/ (PID $!, 200c)"
+  hey -z "${DURATION}s" -c 200 -H "X-Forwarded-For: $(rand_ip)" -H "Accept-Encoding: $(rand_encoding)" "${BASE}/juice-shop/rest/products/search?q=apple" >"$RESULTS_DIR/hey-juice-api.log" 2>&1 &
+  HEY_PIDS="$HEY_PIDS $!"
+  echo "[+] hey: /juice-shop/rest/products/search (PID $!, 200c)"
+  hey -z "${DURATION}s" -c 200 -H "X-Forwarded-For: $(rand_ip)" -H "Accept-Encoding: $(rand_encoding)" "${BASE}/httpbin/get" >"$RESULTS_DIR/hey-httpbin.log" 2>&1 &
+  HEY_PIDS="$HEY_PIDS $!"
+  echo "[+] hey: /httpbin/get (PID $!, 200c)"
+  hey -z "${DURATION}s" -c 200 -H "X-Forwarded-For: $(rand_ip)" -H "Accept-Encoding: $(rand_encoding)" "${BASE}/vampi/users/v1" >"$RESULTS_DIR/hey-vampi.log" 2>&1 &
+  HEY_PIDS="$HEY_PIDS $!"
+  echo "[+] hey: /vampi/users/v1 (PID $!, 200c)"
 fi
 echo ""
 
@@ -87,10 +91,10 @@ if command -v vegeta >/dev/null 2>&1; then
       echo "True-Client-IP: $(rand_ip)"
       echo "Accept-Encoding: $(rand_encoding)"
       echo "Cookie: session=vegeta-${RANDOM}"
-    ) > "$RESULTS_DIR/vegeta-targets-$(echo "$ep" | tr '/' '_').txt"
+    ) >"$RESULTS_DIR/vegeta-targets-$(echo "$ep" | tr '/' '_').txt"
     vegeta attack -rate=500/s -duration="${DURATION}s" -timeout=10s \
-      -targets="$RESULTS_DIR/vegeta-targets-$(echo "$ep" | tr '/' '_').txt" 2>/dev/null \
-      | vegeta encode > "$RESULTS_DIR/vegeta-$(echo "$ep" | tr '/' '_').bin" &
+      -targets="$RESULTS_DIR/vegeta-targets-$(echo "$ep" | tr '/' '_').txt" 2>/dev/null |
+      vegeta encode >"$RESULTS_DIR/vegeta-$(echo "$ep" | tr '/' '_').bin" &
     VEG_PIDS="$VEG_PIDS $!"
     echo "[+] vegeta: $ep (PID $!, 500rps)"
   done
@@ -103,10 +107,12 @@ echo ""
 echo "=== LAYER 4: ab KEEPALIVE BASELINE ==="
 AB_PIDS=""
 if command -v ab >/dev/null 2>&1; then
-  ab -n 999999 -c 300 -k -t "$DURATION" -s 10 -H "X-Forwarded-For: $(rand_ip)" "${BASE}/juice-shop/" > "$RESULTS_DIR/ab-juice-shop.log" 2>&1 &
-  AB_PIDS="$AB_PIDS $!"; echo "[+] ab: /juice-shop/ (PID $!, 300c keepalive)"
-  ab -n 999999 -c 300 -k -t "$DURATION" -s 10 -H "X-Forwarded-For: $(rand_ip)" "${BASE}/httpbin/get" > "$RESULTS_DIR/ab-httpbin.log" 2>&1 &
-  AB_PIDS="$AB_PIDS $!"; echo "[+] ab: /httpbin/get (PID $!, 300c keepalive)"
+  ab -n 999999 -c 300 -k -t "$DURATION" -s 10 -H "X-Forwarded-For: $(rand_ip)" "${BASE}/juice-shop/" >"$RESULTS_DIR/ab-juice-shop.log" 2>&1 &
+  AB_PIDS="$AB_PIDS $!"
+  echo "[+] ab: /juice-shop/ (PID $!, 300c keepalive)"
+  ab -n 999999 -c 300 -k -t "$DURATION" -s 10 -H "X-Forwarded-For: $(rand_ip)" "${BASE}/httpbin/get" >"$RESULTS_DIR/ab-httpbin.log" 2>&1 &
+  AB_PIDS="$AB_PIDS $!"
+  echo "[+] ab: /httpbin/get (PID $!, 300c keepalive)"
 fi
 echo ""
 
@@ -121,7 +127,7 @@ echo "=== LAYER 5: THUNDERING HERD BURSTS (every 60s) ==="
     BURST_NUM=$((BURST_NUM + 1))
     STAMP="burst-${BURST_NUM}-$(date +%s%N)"
     if command -v hey >/dev/null 2>&1; then
-      hey -n 2000 -c 500 -t 10 "${BASE}/httpbin/get?${STAMP}" > /dev/null 2>&1
+      hey -n 2000 -c 500 -t 10 "${BASE}/httpbin/get?${STAMP}" >/dev/null 2>&1
     fi
   done
 ) &
@@ -174,14 +180,17 @@ while true; do
   ESTAB=$(ss -tan state established | wc -l)
 
   # Sample cache status
-  HIT=0; MISS=0; STALE=0; OTHER=0
+  HIT=0
+  MISS=0
+  STALE=0
+  OTHER=0
   for ep in "/juice-shop/" "/httpbin/get" "/whoami/" "/health" "/dvwa/login.php"; do
     S=$(check_cache_status "${BASE}${ep}")
     case "$S" in
-      HIT) HIT=$((HIT + 1)) ;;
-      MISS) MISS=$((MISS + 1)) ;;
-      STALE|UPDATING|EXPIRED) STALE=$((STALE + 1)) ;;
-      *) OTHER=$((OTHER + 1)) ;;
+    HIT) HIT=$((HIT + 1)) ;;
+    MISS) MISS=$((MISS + 1)) ;;
+    STALE | UPDATING | EXPIRED) STALE=$((STALE + 1)) ;;
+    *) OTHER=$((OTHER + 1)) ;;
     esac
   done
 

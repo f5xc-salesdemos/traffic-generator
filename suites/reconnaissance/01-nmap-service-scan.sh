@@ -10,8 +10,8 @@ TARGET="${1:?Usage: 01-nmap-service-scan.sh <TARGET_FQDN>}"
 echo "[*] Nmap service scan against ${TARGET}"
 echo ""
 
-nmap -sV -sC -T4 --top-ports 1000 "$TARGET" \
-  || echo "WARN: nmap exited with non-zero status"
+nmap -sV -sC -T4 --top-ports 1000 "$TARGET" ||
+  echo "WARN: nmap exited with non-zero status"
 
 echo ""
 echo "[*] Nmap service scan complete"

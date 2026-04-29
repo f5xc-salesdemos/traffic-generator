@@ -3,10 +3,14 @@
 // Enables the formjacker toggle, fills checkout form, verifies exfiltrated form data.
 
 const { chromium } = require('playwright');
-const path = require('path');
-const fs = require('fs');
+const path = require('node:path');
+const fs = require('node:fs');
 const PROFILE_DIR = `/tmp/pw-profile-${path.basename(__filename, '.js')}-${process.pid}`;
-process.on('exit', () => { try { fs.rmSync(PROFILE_DIR, { recursive: true, force: true }); } catch {} });
+process.on('exit', () => {
+  try {
+    fs.rmSync(PROFILE_DIR, { recursive: true, force: true });
+  } catch {}
+});
 
 const TARGET_FQDN = process.argv[2];
 if (!TARGET_FQDN) {
@@ -30,7 +34,7 @@ const BASE_URL = `${process.env.TARGET_PROTOCOL || 'http'}://${TARGET_FQDN}`;
     await page.route('**/exfil**', (route) => {
       const url = new URL(route.request().url());
       if (!url.pathname.startsWith('/csd-demo/')) {
-        url.pathname = '/csd-demo' + url.pathname;
+        url.pathname = `/csd-demo${url.pathname}`;
         route.continue({ url: url.toString() });
       } else {
         route.continue();
@@ -67,7 +71,7 @@ const BASE_URL = `${process.env.TARGET_PROTOCOL || 'http'}://${TARGET_FQDN}`;
     // 7. Fetch exfil log, filter for type=formjacker
     const res = await fetch(`${BASE_URL}/csd-demo/exfil/log`);
     const log = await res.json();
-    const formjackerEntries = log.filter(e => e.attack_type === 'formjacker');
+    const formjackerEntries = log.filter((e) => e.attack_type === 'formjacker');
 
     // 8. Verify form data was captured
     if (formjackerEntries.length === 0) {

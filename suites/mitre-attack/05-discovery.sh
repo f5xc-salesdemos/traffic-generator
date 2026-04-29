@@ -46,7 +46,8 @@ PATHS=(
 )
 for p in "${PATHS[@]}"; do
   code=$(curl -sf -o /dev/null -w "%{http_code}" "${BASE}${p}" --max-time 5 2>/dev/null) || code="ERR"
-  tag="[INFO]"; [[ "$code" == "200" ]] && tag="[VULN]"
+  tag="[INFO]"
+  [[ "$code" == "200" ]] && tag="[VULN]"
   printf "  %s %-50s HTTP %s\n" "$tag" "$p" "$code"
 done
 echo ""

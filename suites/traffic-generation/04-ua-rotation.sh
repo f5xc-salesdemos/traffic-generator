@@ -70,11 +70,11 @@ if command -v hey &>/dev/null; then
 
     for endpoint in "${ENDPOINTS[@]}"; do
       echo "    ${endpoint}:"
-      hey -n 100 -c 20 -t 10 -H "User-Agent: ${ua}" "${BASE}${endpoint}" 2>&1 \
-        | grep -E "(Requests/sec|Average|Status)" \
-        | while IFS= read -r line; do
-            echo "      ${line}"
-          done
+      hey -n 100 -c 20 -t 10 -H "User-Agent: ${ua}" "${BASE}${endpoint}" 2>&1 |
+        grep -E "(Requests/sec|Average|Status)" |
+        while IFS= read -r line; do
+          echo "      ${line}"
+        done
     done
     echo ""
   done

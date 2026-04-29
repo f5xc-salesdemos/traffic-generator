@@ -57,18 +57,19 @@ echo "=== T1530: Data from Cloud Storage Objects ==="
 echo "    Technique: Access exposed storage/FTP"
 for path in "/juice-shop/ftp/" "/juice-shop/ftp/acquisitions.md" "/juice-shop/ftp/coupons_2013.md.bak" "/juice-shop/ftp/package.json.bak" "/juice-shop/ftp/eastere.gg"; do
   code=$(curl -sf -o /dev/null -w "%{http_code}" "${BASE}${path}" --max-time 10 2>/dev/null) || code="ERR"
-  tag="[INFO]"; [[ "$code" == "200" ]] && tag="[VULN]"
+  tag="[INFO]"
+  [[ "$code" == "200" ]] && tag="[VULN]"
   printf "  %s %-50s HTTP %s\n" "$tag" "$path" "$code"
 done
 echo ""
 
 echo "=== T1567: Exfiltration Over Web Service ==="
 echo "    Technique: CSD Demo exfiltration simulation"
-curl -sf -X POST "${BASE}/csd-demo/exfil/clear" --max-time 5 > /dev/null 2>&1
+curl -sf -X POST "${BASE}/csd-demo/exfil/clear" --max-time 5 >/dev/null 2>&1
 curl -sf -X POST "${BASE}/csd-demo/exfil?type=collection" \
   -H "Content-Type: application/json" \
   -d '{"technique":"T1567","data":"collected_credentials","source":"mitre-attack-suite","timestamp":"'"$(date -u +%Y-%m-%dT%H:%M:%SZ)"'"}' \
-  --max-time 5 > /dev/null 2>&1
+  --max-time 5 >/dev/null 2>&1
 log_count=$(curl -sf "${BASE}/csd-demo/exfil/log" --max-time 5 2>/dev/null | jq 'length' 2>/dev/null)
 echo "  Exfiltration beacons in CSD log: ${log_count:-0}"
 echo ""

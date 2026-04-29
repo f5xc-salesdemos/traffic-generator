@@ -25,25 +25,25 @@ TOTAL_PARAMS=0
 # Helper: Run arjun and report findings
 ########################################################################
 run_arjun() {
-    local label="$1"
-    local url="$2"
-    local method="${3:-GET}"
-    local output_file="${OUTPUT_DIR}/arjun-$(echo "${label}" | tr ' /' '-' | tr '[:upper:]' '[:lower:]').json"
+  local label="$1"
+  local url="$2"
+  local method="${3:-GET}"
+  local output_file="${OUTPUT_DIR}/arjun-$(echo "${label}" | tr ' /' '-' | tr '[:upper:]' '[:lower:]').json"
 
-    echo "----------------------------------------"
-    echo "[*] ${label}"
-    echo "    URL: ${url}"
-    echo "    Method: ${method}"
-    echo "----------------------------------------"
+  echo "----------------------------------------"
+  echo "[*] ${label}"
+  echo "    URL: ${url}"
+  echo "    Method: ${method}"
+  echo "----------------------------------------"
 
-    local output
-    output=$(arjun -u "${url}" -m "${method}" -oJ "${output_file}" --stable 2>&1) || true
-    echo "${output}"
+  local output
+  output=$(arjun -u "${url}" -m "${method}" -oJ "${output_file}" --stable 2>&1) || true
+  echo "${output}"
 
-    # Count discovered parameters
-    local count=0
-    if [[ -f "${output_file}" ]]; then
-        count=$(python3 -c "
+  # Count discovered parameters
+  local count=0
+  if [[ -f "${output_file}" ]]; then
+    count=$(python3 -c "
 import json, sys
 try:
     with open('${output_file}') as f:
@@ -63,15 +63,15 @@ try:
 except:
     print(0)
 " 2>/dev/null || echo "0")
-    fi
+  fi
 
-    TOTAL_PARAMS=$(( TOTAL_PARAMS + count ))
-    echo ""
-    echo "    Parameters discovered: ${count}"
+  TOTAL_PARAMS=$((TOTAL_PARAMS + count))
+  echo ""
+  echo "    Parameters discovered: ${count}"
 
-    if [[ -f "${output_file}" && "${count}" -gt 0 ]]; then
-        echo "    Details:"
-        python3 -c "
+  if [[ -f "${output_file}" && "${count}" -gt 0 ]]; then
+    echo "    Details:"
+    python3 -c "
 import json
 try:
     with open('${output_file}') as f:
@@ -92,8 +92,8 @@ try:
 except:
     pass
 " 2>/dev/null || true
-    fi
-    echo ""
+  fi
+  echo ""
 }
 
 ########################################################################
@@ -103,16 +103,16 @@ echo "[*] Phase 1: Juice Shop Parameter Discovery"
 echo "========================================"
 
 run_arjun "Juice Shop — Login (POST)" \
-    "${BASE}/juice-shop/rest/user/login" "POST"
+  "${BASE}/juice-shop/rest/user/login" "POST"
 
 run_arjun "Juice Shop — Product Search (GET)" \
-    "${BASE}/juice-shop/rest/products/search" "GET"
+  "${BASE}/juice-shop/rest/products/search" "GET"
 
 run_arjun "Juice Shop — User Register (POST)" \
-    "${BASE}/juice-shop/api/Users/" "POST"
+  "${BASE}/juice-shop/api/Users/" "POST"
 
 run_arjun "Juice Shop — Feedback (POST)" \
-    "${BASE}/juice-shop/api/Feedbacks/" "POST"
+  "${BASE}/juice-shop/api/Feedbacks/" "POST"
 
 ########################################################################
 # Phase 2: VAmPI endpoints
@@ -121,13 +121,13 @@ echo "[*] Phase 2: VAmPI Parameter Discovery"
 echo "========================================"
 
 run_arjun "VAmPI — Login (POST)" \
-    "${BASE}/vampi/users/v1/login" "POST"
+  "${BASE}/vampi/users/v1/login" "POST"
 
 run_arjun "VAmPI — Register (POST)" \
-    "${BASE}/vampi/users/v1/register" "POST"
+  "${BASE}/vampi/users/v1/register" "POST"
 
 run_arjun "VAmPI — Users List (GET)" \
-    "${BASE}/vampi/users/v1" "GET"
+  "${BASE}/vampi/users/v1" "GET"
 
 ########################################################################
 # Phase 3: DVWA endpoints
@@ -136,13 +136,13 @@ echo "[*] Phase 3: DVWA Parameter Discovery"
 echo "========================================"
 
 run_arjun "DVWA — Login (POST)" \
-    "${BASE}/dvwa/login.php" "POST"
+  "${BASE}/dvwa/login.php" "POST"
 
 run_arjun "DVWA — Setup (GET)" \
-    "${BASE}/dvwa/setup.php" "GET"
+  "${BASE}/dvwa/setup.php" "GET"
 
 run_arjun "DVWA — Security Settings (POST)" \
-    "${BASE}/dvwa/security.php" "POST"
+  "${BASE}/dvwa/security.php" "POST"
 
 ########################################################################
 # Phase 4: HTTPBin and CSD Demo
@@ -151,10 +151,10 @@ echo "[*] Phase 4: Additional Endpoint Discovery"
 echo "========================================"
 
 run_arjun "HTTPBin — Root (GET)" \
-    "${BASE}/httpbin/get" "GET"
+  "${BASE}/httpbin/get" "GET"
 
 run_arjun "CSD Demo — Root (GET)" \
-    "${BASE}/csd-demo/" "GET"
+  "${BASE}/csd-demo/" "GET"
 
 ########################################################################
 # Summary
@@ -168,9 +168,9 @@ echo "  Output directory: ${OUTPUT_DIR}/"
 echo ""
 echo "  Output files:"
 for f in "${OUTPUT_DIR}"/arjun-*.json; do
-    if [[ -f "${f}" ]]; then
-        echo "    ${f}"
-    fi
+  if [[ -f "${f}" ]]; then
+    echo "    ${f}"
+  fi
 done
 echo ""
 echo "[*] Arjun parameter discovery finished."

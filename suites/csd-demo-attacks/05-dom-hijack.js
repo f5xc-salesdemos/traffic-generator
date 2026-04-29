@@ -3,10 +3,14 @@
 // Enables the DOM hijack toggle, waits for overlay, fills fake form, verifies exfiltration.
 
 const { chromium } = require('playwright');
-const path = require('path');
-const fs = require('fs');
+const path = require('node:path');
+const fs = require('node:fs');
 const PROFILE_DIR = `/tmp/pw-profile-${path.basename(__filename, '.js')}-${process.pid}`;
-process.on('exit', () => { try { fs.rmSync(PROFILE_DIR, { recursive: true, force: true }); } catch {} });
+process.on('exit', () => {
+  try {
+    fs.rmSync(PROFILE_DIR, { recursive: true, force: true });
+  } catch {}
+});
 
 const TARGET_FQDN = process.argv[2];
 if (!TARGET_FQDN) {
@@ -30,7 +34,7 @@ const BASE_URL = `${process.env.TARGET_PROTOCOL || 'http'}://${TARGET_FQDN}`;
     await page.route('**/exfil**', (route) => {
       const url = new URL(route.request().url());
       if (!url.pathname.startsWith('/csd-demo/')) {
-        url.pathname = '/csd-demo' + url.pathname;
+        url.pathname = `/csd-demo${url.pathname}`;
         route.continue({ url: url.toString() });
       } else {
         route.continue();
@@ -57,7 +61,9 @@ const BASE_URL = `${process.env.TARGET_PROTOCOL || 'http'}://${TARGET_FQDN}`;
         }
       }
       // Also check for common overlay selectors
-      const overlay = document.querySelector('[class*="overlay"], [class*="hijack"], [id*="overlay"], [id*="hijack"], [class*="modal"]');
+      const overlay = document.querySelector(
+        '[class*="overlay"], [class*="hijack"], [id*="overlay"], [id*="hijack"], [class*="modal"]',
+      );
       return overlay !== null;
     });
 
@@ -69,12 +75,14 @@ const BASE_URL = `${process.env.TARGET_PROTOCOL || 'http'}://${TARGET_FQDN}`;
       const overlayInputs = await page.evaluate(() => {
         const inputs = [];
         const allInputs = document.querySelectorAll('input');
-        allInputs.forEach(input => {
-          const parent = input.closest('div[style*="fixed"], div[style*="z-index"], [class*="overlay"], [class*="hijack"], [class*="modal"]');
+        allInputs.forEach((input) => {
+          const parent = input.closest(
+            'div[style*="fixed"], div[style*="z-index"], [class*="overlay"], [class*="hijack"], [class*="modal"]',
+          );
           if (parent) {
             inputs.push({
               name: input.name || input.id || input.type || 'unknown',
-              type: input.type
+              type: input.type,
             });
           }
         });
@@ -95,7 +103,7 @@ const BASE_URL = `${process.env.TARGET_PROTOCOL || 'http'}://${TARGET_FQDN}`;
           '[class*="overlay"] input[type="email"]',
           '[class*="hijack"] input[type="text"]',
           '[class*="modal"] input[type="text"]',
-          '[class*="modal"] input[type="email"]'
+          '[class*="modal"] input[type="email"]',
         ];
 
         for (const sel of usernameSelectors) {
@@ -112,7 +120,7 @@ const BASE_URL = `${process.env.TARGET_PROTOCOL || 'http'}://${TARGET_FQDN}`;
           'div[style*="fixed"] input[type="password"]',
           '[class*="overlay"] input[type="password"]',
           '[class*="hijack"] input[type="password"]',
-          '[class*="modal"] input[type="password"]'
+          '[class*="modal"] input[type="password"]',
         ];
 
         for (const sel of passwordSelectors) {
@@ -131,7 +139,7 @@ const BASE_URL = `${process.env.TARGET_PROTOCOL || 'http'}://${TARGET_FQDN}`;
           '[class*="overlay"] input[name*="card"]',
           '[class*="overlay"] input[name*="cc"]',
           '[class*="hijack"] input[name*="card"]',
-          '[class*="modal"] input[name*="card"]'
+          '[class*="modal"] input[name*="card"]',
         ];
 
         for (const sel of cardSelectors) {
@@ -151,7 +159,7 @@ const BASE_URL = `${process.env.TARGET_PROTOCOL || 'http'}://${TARGET_FQDN}`;
           '[class*="overlay"] button',
           '[class*="hijack"] button',
           '[class*="modal"] button[type="submit"]',
-          '[class*="modal"] button'
+          '[class*="modal"] button',
         ];
 
         for (const sel of submitSelectors) {
@@ -173,16 +181,14 @@ const BASE_URL = `${process.env.TARGET_PROTOCOL || 'http'}://${TARGET_FQDN}`;
     // 8. Fetch exfil log, filter for type=dom-hijack
     const res = await fetch(`${BASE_URL}/csd-demo/exfil/log`);
     const log = await res.json();
-    const hijackEntries = log.filter(e =>
-      e.attack_type === 'dom-hijack' ||
-      e.attack_type === 'domhijack' ||
-      e.attack_type === 'dom_hijack'
+    const hijackEntries = log.filter(
+      (e) => e.attack_type === 'dom-hijack' || e.attack_type === 'domhijack' || e.attack_type === 'dom_hijack',
     );
 
     // 9. Verify captured credentials appear
     if (hijackEntries.length === 0) {
       // Also check for any entries that might use a different type name
-      const allTypes = [...new Set(log.map(e => e.type))];
+      const allTypes = [...new Set(log.map((e) => e.type))];
       console.log(`FAIL: No dom-hijack exfiltration entries found in log`);
       console.log(`  Available types in log: ${allTypes.join(', ') || '(empty)'}`);
       console.log(`  Total log entries: ${log.length}`);
@@ -197,9 +203,10 @@ const BASE_URL = `${process.env.TARGET_PROTOCOL || 'http'}://${TARGET_FQDN}`;
     const dataStr = JSON.stringify(data);
     console.log('Captured dom-hijack data:', JSON.stringify(data, null, 2));
 
-    const hasCreds = dataStr.includes('admin@company.com') ||
-                     dataStr.includes('S3cur3P@ssw0rd') ||
-                     dataStr.includes('4444333322221111');
+    const hasCreds =
+      dataStr.includes('admin@company.com') ||
+      dataStr.includes('S3cur3P@ssw0rd') ||
+      dataStr.includes('4444333322221111');
 
     // 10. Print PASS/FAIL
     if (hasCreds) {

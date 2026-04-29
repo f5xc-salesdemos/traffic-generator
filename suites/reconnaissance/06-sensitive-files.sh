@@ -98,18 +98,18 @@ for path in "${PATHS[@]}"; do
     --max-time 5) || code="ERR"
 
   case "$code" in
-    200)
-      echo "  [FOUND]   ${path} -> HTTP ${code}"
-      ((found_200++)) || true
-      ;;
-    403)
-      echo "  [FORBID]  ${path} -> HTTP ${code}"
-      ((found_403++)) || true
-      ;;
-    *)
-      echo "  [${code}]     ${path}"
-      ((found_other++)) || true
-      ;;
+  200)
+    echo "  [FOUND]   ${path} -> HTTP ${code}"
+    ((found_200++)) || true
+    ;;
+  403)
+    echo "  [FORBID]  ${path} -> HTTP ${code}"
+    ((found_403++)) || true
+    ;;
+  *)
+    echo "  [${code}]     ${path}"
+    ((found_other++)) || true
+    ;;
   esac
 done
 

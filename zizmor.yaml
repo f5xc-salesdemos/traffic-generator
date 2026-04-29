@@ -1,0 +1,51 @@
+---
+rules:
+  # SHA-pinning is enforced by convention and by ref-version-mismatch.
+  # This rule's heuristic flags some valid SHA pins; redundant with
+  # the stricter rule we already rely on.
+  unpinned-uses:
+    disable: true
+  # Low-confidence finding;
+  # persist-credentials: false not required
+  # for our use case
+  artipacked:
+    disable: true
+  # pull_request_target is intentional in
+  # this governance repo
+  dangerous-triggers:
+    disable: true
+  # dependabot[bot] actor check is standard
+  # practice for auto-merge
+  bot-conditions:
+    disable: true
+  # Dependabot cooldown config not required
+  # for our update frequency
+  dependabot-cooldown:
+    disable: true
+  # Template injection findings are false
+  # positives in controlled workflow contexts
+  template-injection:
+    disable: true
+  # Reusable workflow callers inherit
+  # permissions from callers, making
+  # zizmor's analysis unreliable. Repos
+  # manage permissions via workflow-level
+  # blocks.
+  excessive-permissions:
+    disable: true
+  # Standard GitHub Actions cache patterns
+  # (setup-node, upload-artifact) are flagged
+  # as cache poisoning vectors; these are
+  # first-party actions.
+  cache-poisoning:
+    disable: true
+  # Caller wrappers use secrets: inherit
+  # for reusable workflows
+  secrets-inherit:
+    disable: true
+  # Governance workflows intentionally use
+  # secrets without dedicated environments;
+  # environment-based access control is not
+  # needed for org-internal automation tokens
+  secrets-outside-env:
+    disable: true

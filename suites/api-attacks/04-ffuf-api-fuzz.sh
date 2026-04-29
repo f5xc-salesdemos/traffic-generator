@@ -16,7 +16,7 @@ echo "[+] Fuzzing API endpoints with ffuf..."
 
 # Create a temporary wordlist of common API paths
 WORDLIST=$(mktemp /tmp/ffuf-api-wordlist.XXXXXX)
-cat > "$WORDLIST" << 'EOF'
+cat >"$WORDLIST" <<'EOF'
 api
 api/v1
 api/v2
@@ -59,8 +59,8 @@ for prefix in "" "/vampi" "/juice-shop" "/dvwa"; do
     -timeout 10 \
     -mc all \
     -fc 404 \
-    -s \
-    || echo "WARN: ffuf returned non-zero for prefix '${prefix}'"
+    -s ||
+    echo "WARN: ffuf returned non-zero for prefix '${prefix}'"
 done
 
 rm -f "$WORDLIST"
@@ -71,7 +71,7 @@ echo ""
 echo "[+] Fuzzing HTTP methods..."
 
 METHODS_FILE=$(mktemp /tmp/ffuf-methods.XXXXXX)
-cat > "$METHODS_FILE" << 'EOF'
+cat >"$METHODS_FILE" <<'EOF'
 GET
 POST
 PUT
@@ -104,8 +104,8 @@ for endpoint in "${FUZZ_ENDPOINTS[@]}"; do
     -t 10 \
     -timeout 10 \
     -mc all \
-    -s \
-    || echo "WARN: ffuf method fuzz returned non-zero"
+    -s ||
+    echo "WARN: ffuf method fuzz returned non-zero"
 done
 
 rm -f "$METHODS_FILE"

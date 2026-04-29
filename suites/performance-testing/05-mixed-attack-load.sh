@@ -44,12 +44,12 @@ echo ""
 
 url_file=$(mktemp)
 for _ in $(seq "$TOTAL_REQUESTS"); do
-  if (( RANDOM % 100 < 70 )); then
+  if ((RANDOM % 100 < 70)); then
     echo "${LEGIT_URLS[$((RANDOM % ${#LEGIT_URLS[@]}))]}"
   else
     echo "${ATTACK_URLS[$((RANDOM % ${#ATTACK_URLS[@]}))]}"
   fi
-done > "$url_file"
+done >"$url_file"
 
 legit_count=$(grep -cvE '(OR+1|script|passwd|sqli|exec|meta-data|UNION)' "$url_file" || true)
 attack_count=$(grep -cE '(OR+1|script|passwd|sqli|exec|meta-data|UNION)' "$url_file" || true)
@@ -63,7 +63,7 @@ results=$(cat "$url_file" | xargs -P"$CONCURRENCY" -I{} \
   --max-time 30 --connect-timeout 5 {} 2>/dev/null)
 
 end_ns=$(date +%s%N)
-wall_ms=$(( (end_ns - start_ns) / 1000000 ))
+wall_ms=$(((end_ns - start_ns) / 1000000))
 
 rm -f "$url_file"
 

@@ -20,27 +20,27 @@ echo ""
 TOTAL_FINDINGS=0
 
 run_nikto() {
-    local url="$1"
-    local label="$2"
-    local extra_args="${3:-}"
+  local url="$1"
+  local label="$2"
+  local extra_args="${3:-}"
 
-    echo "----------------------------------------"
-    echo "[*] Scanning: ${label}"
-    echo "    URL: ${url}"
-    echo "----------------------------------------"
+  echo "----------------------------------------"
+  echo "[*] Scanning: ${label}"
+  echo "    URL: ${url}"
+  echo "----------------------------------------"
 
-    local output
-    output=$(nikto -h "${url}" -maxtime 180s ${extra_args} -nointeractive 2>&1) || true
-    echo "${output}"
+  local output
+  output=$(nikto -h "${url}" -maxtime 180s ${extra_args} -nointeractive 2>&1) || true
+  echo "${output}"
 
-    # Count findings (lines containing "+ " that are not informational headers)
-    local count
-    count=$(echo "${output}" | grep -c "^+ " 2>/dev/null || echo "0")
-    TOTAL_FINDINGS=$(( TOTAL_FINDINGS + count ))
+  # Count findings (lines containing "+ " that are not informational headers)
+  local count
+  count=$(echo "${output}" | grep -c "^+ " 2>/dev/null || echo "0")
+  TOTAL_FINDINGS=$((TOTAL_FINDINGS + count))
 
-    echo ""
-    echo "    Findings for ${label}: ${count}"
-    echo ""
+  echo ""
+  echo "    Findings for ${label}: ${count}"
+  echo ""
 }
 
 # Scan each application
@@ -59,7 +59,7 @@ echo "----------------------------------------"
 OUTPUT=$(nikto -h "${BASE}/" -maxtime 120s -C all -nointeractive 2>&1) || true
 echo "${OUTPUT}"
 ROOT_COUNT=$(echo "${OUTPUT}" | grep -c "^+ " 2>/dev/null || echo "0")
-TOTAL_FINDINGS=$(( TOTAL_FINDINGS + ROOT_COUNT ))
+TOTAL_FINDINGS=$((TOTAL_FINDINGS + ROOT_COUNT))
 
 echo ""
 echo "    Findings for Root: ${ROOT_COUNT}"

@@ -21,8 +21,8 @@ echo "    Resolved to: ${TARGET_IP}"
 echo ""
 
 echo "[+] Running masscan against ${TARGET_IP} (all ports)..."
-masscan "$TARGET_IP" -p0-65535 --rate=1000 \
-  || echo "WARN: masscan exited with non-zero status"
+masscan "$TARGET_IP" -p0-65535 --rate=1000 ||
+  echo "WARN: masscan exited with non-zero status"
 
 echo ""
 echo "[*] Masscan port sweep complete"

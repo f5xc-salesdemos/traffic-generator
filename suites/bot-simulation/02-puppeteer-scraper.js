@@ -5,10 +5,14 @@
 // Estimated duration: 1-2 minutes
 
 const { chromium } = require('playwright');
-const path = require('path');
-const fs = require('fs');
+const path = require('node:path');
+const fs = require('node:fs');
 const PROFILE_DIR = `/tmp/pw-profile-${path.basename(__filename, '.js')}-${process.pid}`;
-process.on('exit', () => { try { fs.rmSync(PROFILE_DIR, { recursive: true, force: true }); } catch {} });
+process.on('exit', () => {
+  try {
+    fs.rmSync(PROFILE_DIR, { recursive: true, force: true });
+  } catch {}
+});
 
 const TARGET_FQDN = process.argv[2];
 if (!TARGET_FQDN) {
@@ -64,9 +68,7 @@ const PAGES_TO_SCRAPE = [
 
       const title = await page.title();
       const textLen = await page.evaluate(() => document.body.innerText.length);
-      const links = await page.evaluate(() =>
-        Array.from(document.querySelectorAll('a[href]')).length
-      );
+      const links = await page.evaluate(() => Array.from(document.querySelectorAll('a[href]')).length);
 
       console.log(`    HTTP ${status} | Title: ${title.substring(0, 40)} | Text: ${textLen} chars | Links: ${links}`);
       scraped++;

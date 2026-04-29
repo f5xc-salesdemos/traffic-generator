@@ -61,7 +61,7 @@ for batch in "${BATCHES[@]}"; do
   fi
 
   end_ns=$(date +%s%N)
-  wall_ms=$(( (end_ns - start_ns) / 1000000 ))
+  wall_ms=$(((end_ns - start_ns) / 1000000))
 
   tw_after=$(ss -tan state time-wait 2>/dev/null | wc -l)
   port_after=$(ss -tan | awk -v low="$LOW" -v high="$HIGH" '{split($4,a,":"); p=a[length(a)]; if(p>=low && p<=high) count++} END {print count+0}')

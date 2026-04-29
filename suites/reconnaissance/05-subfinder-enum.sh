@@ -16,8 +16,8 @@ echo "[+] Root domain: ${ROOT_DOMAIN}"
 echo ""
 
 echo "[+] Running subfinder..."
-subfinder -d "$ROOT_DOMAIN" -silent \
-  || echo "WARN: subfinder exited with non-zero status"
+subfinder -d "$ROOT_DOMAIN" -silent ||
+  echo "WARN: subfinder exited with non-zero status"
 
 echo ""
 echo "[*] Subfinder enumeration complete"
