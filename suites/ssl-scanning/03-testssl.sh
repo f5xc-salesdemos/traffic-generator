@@ -15,8 +15,8 @@ fi
 echo "[*] testssl.sh against ${TARGET}"
 echo ""
 
-testssl --quiet --color 0 "$TARGET" \
-  || echo "WARN: testssl exited with non-zero status"
+testssl --quiet --color 0 "$TARGET" ||
+  echo "WARN: testssl exited with non-zero status"
 
 echo ""
 echo "[*] testssl.sh complete"

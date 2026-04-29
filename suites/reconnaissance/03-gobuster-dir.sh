@@ -29,8 +29,8 @@ gobuster dir -u "${TARGET_PROTOCOL:-http}://${TARGET}" \
   -w "$WORDLIST" \
   -t 20 \
   -k \
-  --no-error \
-  || echo "WARN: gobuster exited with non-zero status"
+  --no-error ||
+  echo "WARN: gobuster exited with non-zero status"
 
 echo ""
 echo "[*] Gobuster directory scan complete"

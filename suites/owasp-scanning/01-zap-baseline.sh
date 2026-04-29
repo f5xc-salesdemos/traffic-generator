@@ -75,13 +75,13 @@ run_zap_daemon_mode() {
     APP_URL="${BASE}${app}"
     echo ""
     echo "[*] Spidering: ${APP_URL}"
-    SCAN_ID=$(curl -s "${ZAP_API}/JSON/spider/action/scan/?url=${APP_URL}&maxChildren=50&recurse=true" \
-      | python3 -c "import sys,json; print(json.load(sys.stdin).get('scan','0'))" 2>/dev/null || echo "0")
+    SCAN_ID=$(curl -s "${ZAP_API}/JSON/spider/action/scan/?url=${APP_URL}&maxChildren=50&recurse=true" |
+      python3 -c "import sys,json; print(json.load(sys.stdin).get('scan','0'))" 2>/dev/null || echo "0")
 
     # Wait for spider to finish (max 120s)
     for j in $(seq 1 40); do
-      STATUS=$(curl -s "${ZAP_API}/JSON/spider/view/status/?scanId=${SCAN_ID}" \
-        | python3 -c "import sys,json; print(json.load(sys.stdin).get('status','100'))" 2>/dev/null || echo "100")
+      STATUS=$(curl -s "${ZAP_API}/JSON/spider/view/status/?scanId=${SCAN_ID}" |
+        python3 -c "import sys,json; print(json.load(sys.stdin).get('status','100'))" 2>/dev/null || echo "100")
       if [[ "${STATUS}" -ge 100 ]]; then
         break
       fi
@@ -95,8 +95,8 @@ run_zap_daemon_mode() {
   echo ""
   echo "[*] Waiting for passive scan to complete..."
   for k in $(seq 1 40); do
-    RECORDS=$(curl -s "${ZAP_API}/JSON/pscan/view/recordsToScan/" \
-      | python3 -c "import sys,json; print(json.load(sys.stdin).get('recordsToScan','0'))" 2>/dev/null || echo "0")
+    RECORDS=$(curl -s "${ZAP_API}/JSON/pscan/view/recordsToScan/" |
+      python3 -c "import sys,json; print(json.load(sys.stdin).get('recordsToScan','0'))" 2>/dev/null || echo "0")
     if [[ "${RECORDS}" -eq 0 ]]; then
       break
     fi

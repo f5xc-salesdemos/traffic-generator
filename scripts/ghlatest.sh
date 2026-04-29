@@ -10,10 +10,10 @@ delay=5
 ver=""
 while [ "$attempt" -lt "$max" ]; do
   ver=$(curl -fsSL -o /dev/null -w '%{url_effective}' \
-    "https://github.com/${repo}/releases/latest" 2>/dev/null \
-    | sed 's|.*/||;s|^v||') \
-    && [ -n "$ver" ] && [ "$ver" = "${ver##*/}" ] \
-    && {
+    "https://github.com/${repo}/releases/latest" 2>/dev/null |
+    sed 's|.*/||;s|^v||') &&
+    [ -n "$ver" ] && [ "$ver" = "${ver##*/}" ] &&
+    {
       echo "$ver"
       exit 0
     }

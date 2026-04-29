@@ -279,8 +279,8 @@ echo "=== TEST 4: vegeta CONSTANT-RATE (find max sustainable rate) ==="
 
 for rate_mult in 1 2 4; do
   RATE=$((VEGETA_RATE * rate_mult))
-  echo "GET ${BASE}/httpbin/get" | vegeta attack -rate="${RATE}/s" -duration=30s -timeout=10s 2>/dev/null \
-    | vegeta report >"$RESULTS/vegeta-${RATE}rps.log" 2>&1
+  echo "GET ${BASE}/httpbin/get" | vegeta attack -rate="${RATE}/s" -duration=30s -timeout=10s 2>/dev/null |
+    vegeta report >"$RESULTS/vegeta-${RATE}rps.log" 2>&1
   SUCCESS=$(grep "Success" "$RESULTS/vegeta-${RATE}rps.log" 2>/dev/null | awk '{print $3}')
   ACTUAL_RATE=$(grep "Requests" "$RESULTS/vegeta-${RATE}rps.log" 2>/dev/null | awk '{printf "%.0f", $3}')
   P99=$(grep "99th" "$RESULTS/vegeta-${RATE}rps.log" 2>/dev/null | awk '{print $2}')
@@ -322,8 +322,8 @@ done
 
 # vegeta
 for ep in "/juice-shop/" "/httpbin/get" "/dvwa/login.php"; do
-  echo "GET ${BASE}${ep}" | vegeta attack -rate="${VEGETA_RATE}/s" -duration="${KRAKEN_DUR}s" -timeout=10s 2>/dev/null \
-    | vegeta encode >"$RESULTS/kraken-vegeta-$(echo "$ep" | tr '/' '_').bin" &
+  echo "GET ${BASE}${ep}" | vegeta attack -rate="${VEGETA_RATE}/s" -duration="${KRAKEN_DUR}s" -timeout=10s 2>/dev/null |
+    vegeta encode >"$RESULTS/kraken-vegeta-$(echo "$ep" | tr '/' '_').bin" &
   ALL_PIDS="$ALL_PIDS $!"
 done
 

@@ -1,3 +1,10 @@
+# shellcheck configuration for traffic-generator
+# This repo contains attack simulation scripts with intentional patterns
+# that trigger false positives.
+
+# Only report warnings and errors, not info/style
+severity=warning
+
 # Disable SC2016: Expressions don't expand in single quotes.
 # All single-quoted $var references in this repo are intentional jq variables,
 # not missed shell expansions.

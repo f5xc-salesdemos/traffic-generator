@@ -14,8 +14,8 @@ nuclei -u "${TARGET_PROTOCOL:-http}://${TARGET}" \
   -severity medium,high,critical \
   -timeout 5 \
   -rate-limit 50 \
-  -silent \
-  || echo "WARN: nuclei exited with non-zero status"
+  -silent ||
+  echo "WARN: nuclei exited with non-zero status"
 
 echo ""
 echo "[*] Nuclei scan complete"

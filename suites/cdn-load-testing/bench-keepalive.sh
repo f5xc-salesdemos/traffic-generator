@@ -273,8 +273,8 @@ Accept-Encoding: gzip
 Connection: keep-alive" >"$RESULTS/t4-vegeta-targets.txt"
 
   vegeta attack -rate="${RATE}/s" -duration=30s -timeout=10s -keepalive \
-    -targets="$RESULTS/t4-vegeta-targets.txt" 2>/dev/null \
-    | vegeta report >"$RESULTS/t4-vegeta-${RATE}rps.log" 2>&1
+    -targets="$RESULTS/t4-vegeta-targets.txt" 2>/dev/null |
+    vegeta report >"$RESULTS/t4-vegeta-${RATE}rps.log" 2>&1
   SUCCESS=$(grep "Success" "$RESULTS/t4-vegeta-${RATE}rps.log" 2>/dev/null | head -1 | awk '{print $3}')
   ACTUAL=$(grep "Throughput" "$RESULTS/t4-vegeta-${RATE}rps.log" 2>/dev/null | awk '{printf "%.0f", $2}')
   P99=$(grep "99th" "$RESULTS/t4-vegeta-${RATE}rps.log" 2>/dev/null | awk '{print $2}')
@@ -330,8 +330,8 @@ Accept-Encoding: gzip
 Connection: keep-alive" >"$RESULTS/t5-vegeta-targets-$(echo "$ep" | tr '/' '_').txt"
 
   vegeta attack -rate="${VEGETA_RATE}/s" -duration="${KRAKEN_DUR}s" -timeout=10s -keepalive \
-    -targets="$RESULTS/t5-vegeta-targets-$(echo "$ep" | tr '/' '_').txt" 2>/dev/null \
-    | vegeta encode >"$RESULTS/t5-vegeta-$(echo "$ep" | tr '/' '_').bin" &
+    -targets="$RESULTS/t5-vegeta-targets-$(echo "$ep" | tr '/' '_').txt" 2>/dev/null |
+    vegeta encode >"$RESULTS/t5-vegeta-$(echo "$ep" | tr '/' '_').bin" &
   ALL_PIDS="$ALL_PIDS $!"
 done
 

@@ -32,8 +32,8 @@ feroxbuster -u "${TARGET_PROTOCOL:-http}://${TARGET}" \
   -t 10 \
   -k \
   --no-state \
-  --time-limit 300s \
-  || echo "WARN: feroxbuster exited with non-zero status"
+  --time-limit 300s ||
+  echo "WARN: feroxbuster exited with non-zero status"
 
 echo ""
 echo "[*] Feroxbuster recursive scan complete"

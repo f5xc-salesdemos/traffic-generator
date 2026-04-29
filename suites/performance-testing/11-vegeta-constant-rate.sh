@@ -38,8 +38,8 @@ printf "  %-8s %8s %8s %8s %8s %10s %8s %8s\n" \
 echo "  -------- -------- -------- -------- -------- ---------- -------- --------"
 
 for rate in "${RATES[@]}"; do
-  result=$(vegeta attack -targets="$TARGETS_FILE" -rate="$rate" -duration="$DURATION" -timeout=30s 2>/dev/null \
-    | vegeta report -type=text 2>/dev/null)
+  result=$(vegeta attack -targets="$TARGETS_FILE" -rate="$rate" -duration="$DURATION" -timeout=30s 2>/dev/null |
+    vegeta report -type=text 2>/dev/null)
 
   rps=$(echo "$result" | grep 'Requests' | head -1 | awk '{print $3}')
   ok=$(echo "$result" | grep '200' | awk '{print $2}' | head -1)

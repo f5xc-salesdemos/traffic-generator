@@ -23,8 +23,8 @@ ENDPOINTS=(
 
 for endpoint in "${ENDPOINTS[@]}"; do
   echo "[+] Scanning: ${endpoint}"
-  arjun -u "$endpoint" -t 10 --stable \
-    || echo "WARN: arjun returned non-zero for ${endpoint}"
+  arjun -u "$endpoint" -t 10 --stable ||
+    echo "WARN: arjun returned non-zero for ${endpoint}"
   echo ""
 done
 

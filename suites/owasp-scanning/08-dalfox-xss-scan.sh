@@ -84,8 +84,8 @@ echo "========================================"
 
 # Attempt to get DVWA session cookie
 echo "[*] Authenticating to DVWA..."
-PHPSESSID=$(curl -s -I "${BASE}/dvwa/login.php" 2>/dev/null \
-  | grep -ioP 'PHPSESSID=\K[^;]+' || echo "")
+PHPSESSID=$(curl -s -I "${BASE}/dvwa/login.php" 2>/dev/null |
+  grep -ioP 'PHPSESSID=\K[^;]+' || echo "")
 
 if [[ -n "${PHPSESSID}" ]]; then
   # Try login

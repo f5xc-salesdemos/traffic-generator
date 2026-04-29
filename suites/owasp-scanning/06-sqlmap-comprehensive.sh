@@ -77,16 +77,16 @@ DVWA_LOGIN_RESPONSE=$(curl -s -c - -b - \
 # Extract PHPSESSID from cookie jar
 PHPSESSID=$(curl -s -c - \
   -d "username=admin&password=password&Login=Login" \
-  -L "${BASE}/dvwa/login.php" 2>/dev/null \
-  | grep -oP 'PHPSESSID\s+\K\S+' || echo "")
+  -L "${BASE}/dvwa/login.php" 2>/dev/null |
+  grep -oP 'PHPSESSID\s+\K\S+' || echo "")
 
 if [[ -n "${PHPSESSID}" ]]; then
   DVWA_COOKIE="PHPSESSID=${PHPSESSID};security=low"
   echo "[*] DVWA session obtained: ${DVWA_COOKIE}"
 else
   # Fall back to a simple cookie grab
-  PHPSESSID=$(curl -s -I "${BASE}/dvwa/login.php" 2>/dev/null \
-    | grep -ioP 'PHPSESSID=\K[^;]+' || echo "fallback_session")
+  PHPSESSID=$(curl -s -I "${BASE}/dvwa/login.php" 2>/dev/null |
+    grep -ioP 'PHPSESSID=\K[^;]+' || echo "fallback_session")
   DVWA_COOKIE="PHPSESSID=${PHPSESSID};security=low"
   echo "[!] Could not fully authenticate. Using fallback cookie: ${DVWA_COOKIE}"
 fi

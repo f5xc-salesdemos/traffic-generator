@@ -80,13 +80,13 @@ for app in "${APPS[@]}"; do
   echo ""
   echo "[*] Spidering: ${APP_URL}"
 
-  SCAN_ID=$(curl -s "${ZAP_API}/JSON/spider/action/scan/?url=${APP_URL}&maxChildren=100&recurse=true" \
-    | python3 -c "import sys,json; print(json.load(sys.stdin).get('scan','0'))" 2>/dev/null || echo "0")
+  SCAN_ID=$(curl -s "${ZAP_API}/JSON/spider/action/scan/?url=${APP_URL}&maxChildren=100&recurse=true" |
+    python3 -c "import sys,json; print(json.load(sys.stdin).get('scan','0'))" 2>/dev/null || echo "0")
 
   # Wait for spider to finish (max 180s)
   for j in $(seq 1 60); do
-    STATUS=$(curl -s "${ZAP_API}/JSON/spider/view/status/?scanId=${SCAN_ID}" \
-      | python3 -c "import sys,json; print(json.load(sys.stdin).get('status','100'))" 2>/dev/null || echo "100")
+    STATUS=$(curl -s "${ZAP_API}/JSON/spider/view/status/?scanId=${SCAN_ID}" |
+      python3 -c "import sys,json; print(json.load(sys.stdin).get('status','100'))" 2>/dev/null || echo "100")
     if [[ "${STATUS}" -ge 100 ]]; then
       break
     fi
@@ -110,8 +110,8 @@ sleep 10
 echo ""
 echo "[*] Waiting for passive scan queue to drain..."
 for k in $(seq 1 30); do
-  RECORDS=$(curl -s "${ZAP_API}/JSON/pscan/view/recordsToScan/" \
-    | python3 -c "import sys,json; print(json.load(sys.stdin).get('recordsToScan','0'))" 2>/dev/null || echo "0")
+  RECORDS=$(curl -s "${ZAP_API}/JSON/pscan/view/recordsToScan/" |
+    python3 -c "import sys,json; print(json.load(sys.stdin).get('recordsToScan','0'))" 2>/dev/null || echo "0")
   if [[ "${RECORDS}" -eq 0 ]]; then
     break
   fi
@@ -131,8 +131,8 @@ for app in "${APPS[@]}"; do
   echo ""
   echo "[*] Active scanning: ${APP_URL}"
 
-  ASCAN_ID=$(curl -s "${ZAP_API}/JSON/ascan/action/scan/?url=${APP_URL}&recurse=true&inScopeOnly=false&scanPolicyName=&method=&postData=" \
-    | python3 -c "import sys,json; print(json.load(sys.stdin).get('scan','0'))" 2>/dev/null || echo "0")
+  ASCAN_ID=$(curl -s "${ZAP_API}/JSON/ascan/action/scan/?url=${APP_URL}&recurse=true&inScopeOnly=false&scanPolicyName=&method=&postData=" |
+    python3 -c "import sys,json; print(json.load(sys.stdin).get('scan','0'))" 2>/dev/null || echo "0")
   ACTIVE_SCAN_IDS+=("${ASCAN_ID}")
   echo "    Active scan ID: ${ASCAN_ID}"
 done
@@ -144,8 +144,8 @@ ALL_DONE=0
 for attempt in $(seq 1 120); do
   ALL_DONE=1
   for sid in "${ACTIVE_SCAN_IDS[@]}"; do
-    STATUS=$(curl -s "${ZAP_API}/JSON/ascan/view/status/?scanId=${sid}" \
-      | python3 -c "import sys,json; print(json.load(sys.stdin).get('status','100'))" 2>/dev/null || echo "100")
+    STATUS=$(curl -s "${ZAP_API}/JSON/ascan/view/status/?scanId=${sid}" |
+      python3 -c "import sys,json; print(json.load(sys.stdin).get('status','100'))" 2>/dev/null || echo "100")
     if [[ "${STATUS}" -lt 100 ]]; then
       ALL_DONE=0
       break

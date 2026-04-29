@@ -15,8 +15,8 @@ fi
 echo "[*] sslyze against ${TARGET}"
 echo ""
 
-sslyze "$TARGET" \
-  || echo "WARN: sslyze exited with non-zero status"
+sslyze "$TARGET" ||
+  echo "WARN: sslyze exited with non-zero status"
 
 echo ""
 echo "[*] sslyze complete"

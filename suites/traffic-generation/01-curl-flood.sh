@@ -37,9 +37,9 @@ if command -v wrk &>/dev/null; then
 
   for endpoint in "${ENDPOINTS[@]}"; do
     echo "  wrk: ${endpoint}"
-    wrk -t"${THREADS}" -c"${CONCURRENCY}" -d"${DURATION}s" "${BASE}${endpoint}" 2>&1 \
-      | grep -E "(Requests/sec|Latency|Transfer|Socket)" \
-      | while IFS= read -r line; do
+    wrk -t"${THREADS}" -c"${CONCURRENCY}" -d"${DURATION}s" "${BASE}${endpoint}" 2>&1 |
+      grep -E "(Requests/sec|Latency|Transfer|Socket)" |
+      while IFS= read -r line; do
         echo "    ${line}"
       done
     echo ""

@@ -93,8 +93,8 @@ if command -v vegeta >/dev/null 2>&1; then
       echo "Cookie: session=vegeta-${RANDOM}"
     ) >"$RESULTS_DIR/vegeta-targets-$(echo "$ep" | tr '/' '_').txt"
     vegeta attack -rate=500/s -duration="${DURATION}s" -timeout=10s \
-      -targets="$RESULTS_DIR/vegeta-targets-$(echo "$ep" | tr '/' '_').txt" 2>/dev/null \
-      | vegeta encode >"$RESULTS_DIR/vegeta-$(echo "$ep" | tr '/' '_').bin" &
+      -targets="$RESULTS_DIR/vegeta-targets-$(echo "$ep" | tr '/' '_').txt" 2>/dev/null |
+      vegeta encode >"$RESULTS_DIR/vegeta-$(echo "$ep" | tr '/' '_').bin" &
     VEG_PIDS="$VEG_PIDS $!"
     echo "[+] vegeta: $ep (PID $!, 500rps)"
   done
