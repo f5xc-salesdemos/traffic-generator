@@ -40,8 +40,8 @@ if command -v wrk &>/dev/null; then
     wrk -t"${THREADS}" -c"${CONCURRENCY}" -d"${DURATION}s" "${BASE}${endpoint}" 2>&1 \
       | grep -E "(Requests/sec|Latency|Transfer|Socket)" \
       | while IFS= read -r line; do
-          echo "    ${line}"
-        done
+        echo "    ${line}"
+      done
     echo ""
   done
 
@@ -53,15 +53,15 @@ else
   URL_FILE=$(mktemp /tmp/curl-flood-urls.XXXXXX)
   for i in $(seq 1 $TOTAL_REQUESTS); do
     idx=$((i % ${#ENDPOINTS[@]}))
-    echo "${BASE}${ENDPOINTS[$idx]}" >> "$URL_FILE"
+    echo "${BASE}${ENDPOINTS[$idx]}" >>"$URL_FILE"
   done
 
   echo "[+] Sending ${TOTAL_REQUESTS} requests at ${CONCURRENCY} concurrent..."
   xargs -a "$URL_FILE" -P "$CONCURRENCY" -I {} \
     curl -sk -o /dev/null -w "%{http_code} %{time_total}s %{url_effective}\n" {} --max-time 10 \
     2>/dev/null | while IFS= read -r line; do
-      echo "    $line"
-    done
+    echo "    $line"
+  done
 
   rm -f "$URL_FILE"
 fi

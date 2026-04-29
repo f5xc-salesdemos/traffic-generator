@@ -46,46 +46,46 @@ echo ""
 SCAN_RESULTS=()
 
 if [[ -f "${ZAP_BASELINE}" ]]; then
-    echo "    [OK] ZAP Baseline report found"
-    SCAN_RESULTS+=("zap-baseline")
+  echo "    [OK] ZAP Baseline report found"
+  SCAN_RESULTS+=("zap-baseline")
 else
-    echo "    [--] ZAP Baseline report not found"
+  echo "    [--] ZAP Baseline report not found"
 fi
 
 if [[ -f "${ZAP_ACTIVE}" ]]; then
-    echo "    [OK] ZAP Active Scan report found"
-    SCAN_RESULTS+=("zap-active")
+  echo "    [OK] ZAP Active Scan report found"
+  SCAN_RESULTS+=("zap-active")
 else
-    echo "    [--] ZAP Active Scan report not found"
+  echo "    [--] ZAP Active Scan report not found"
 fi
 
 if [[ -d "${SQLMAP_DIR}" ]]; then
-    SQLMAP_COUNT=$(find "${SQLMAP_DIR}" -name "*.csv" -o -name "*.txt" -o -name "log" 2>/dev/null | wc -l)
-    echo "    [OK] SQLMap output found (${SQLMAP_COUNT} files)"
-    SCAN_RESULTS+=("sqlmap")
+  SQLMAP_COUNT=$(find "${SQLMAP_DIR}" -name "*.csv" -o -name "*.txt" -o -name "log" 2>/dev/null | wc -l)
+  echo "    [OK] SQLMap output found (${SQLMAP_COUNT} files)"
+  SCAN_RESULTS+=("sqlmap")
 else
-    echo "    [--] SQLMap output not found"
+  echo "    [--] SQLMap output not found"
 fi
 
 if [[ -d "${DALFOX_DIR}" ]]; then
-    DALFOX_TOTAL=0
-    for f in "${DALFOX_DIR}"/dalfox-*.txt; do
-        if [[ -f "${f}" ]]; then
-            c=$(wc -l < "${f}" 2>/dev/null || echo "0")
-            DALFOX_TOTAL=$(( DALFOX_TOTAL + c ))
-        fi
-    done
-    echo "    [OK] DalFox output found (${DALFOX_TOTAL} XSS vectors)"
-    SCAN_RESULTS+=("dalfox")
+  DALFOX_TOTAL=0
+  for f in "${DALFOX_DIR}"/dalfox-*.txt; do
+    if [[ -f "${f}" ]]; then
+      c=$(wc -l <"${f}" 2>/dev/null || echo "0")
+      DALFOX_TOTAL=$((DALFOX_TOTAL + c))
+    fi
+  done
+  echo "    [OK] DalFox output found (${DALFOX_TOTAL} XSS vectors)"
+  SCAN_RESULTS+=("dalfox")
 else
-    echo "    [--] DalFox output not found"
+  echo "    [--] DalFox output not found"
 fi
 
 if [[ -d "${ARJUN_DIR}" ]]; then
-    echo "    [OK] Arjun output found"
-    SCAN_RESULTS+=("arjun")
+  echo "    [OK] Arjun output found"
+  SCAN_RESULTS+=("arjun")
 else
-    echo "    [--] Arjun output not found"
+  echo "    [--] Arjun output not found"
 fi
 
 echo ""

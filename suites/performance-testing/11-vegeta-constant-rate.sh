@@ -18,7 +18,7 @@ DURATION=20s
 RATES=(10 50 100 200 500 1000)
 
 TARGETS_FILE=$(mktemp)
-cat > "$TARGETS_FILE" <<EOF
+cat >"$TARGETS_FILE" <<EOF
 GET ${BASE}/health
 GET ${BASE}/juice-shop/
 GET ${BASE}/juice-shop/rest/products/search?q=test
@@ -31,7 +31,7 @@ EOF
 
 echo "[*] vegeta constant-rate attack against ${TARGET}"
 echo "    Duration per rate: ${DURATION}"
-echo "    Endpoints: $(wc -l < "$TARGETS_FILE")"
+echo "    Endpoints: $(wc -l <"$TARGETS_FILE")"
 echo ""
 printf "  %-8s %8s %8s %8s %8s %10s %8s %8s\n" \
   "Rate" "OK" "Errors" "Avg" "P50" "P99" "Max" "Bytes/s"

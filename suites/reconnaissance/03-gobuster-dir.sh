@@ -14,7 +14,7 @@ WORDLIST="/opt/seclists/Discovery/Web-Content/common.txt"
 if [[ -f "$WORDLIST" ]]; then
   echo "WARN: Wordlist not found at ${WORDLIST}, trying alternate locations..."
   for alt in /usr/share/seclists/Discovery/Web-Content/common.txt \
-             /usr/share/wordlists/dirb/common.txt; do
+    /usr/share/wordlists/dirb/common.txt; do
     if [[ -f "$alt" ]]; then
       WORDLIST="$alt"
       break

@@ -2,3 +2,32 @@
 # All single-quoted $var references in this repo are intentional jq variables,
 # not missed shell expansions.
 disable=SC2016
+
+# Disable SC2034: Variable appears unused.
+# Attack scripts set variables for use in sourced library scripts (_lib.sh,
+# _crapi-lib.sh, etc.) and trap handlers. ShellCheck cannot follow sourced
+# variable usage across files.
+disable=SC2034
+
+# Disable SC1091: Not following sourced file.
+# Scripts source _lib.sh, _crapi-lib.sh, etc. via relative paths that
+# ShellCheck cannot resolve in CI.
+disable=SC1091
+
+# Disable SC2064: Use single quotes for trap to prevent early expansion.
+# Attack scripts intentionally expand variables at trap-set time to capture
+# cleanup state.
+disable=SC2064
+
+# Disable SC2045: Iterating over ls output is fragile.
+# Runner/orchestration scripts iterate over numbered test scripts; filenames
+# are controlled and alphanumeric-only.
+disable=SC2045
+
+# Disable SC2002: Useless cat.
+# Some pipelines use cat for readability in complex log-parsing chains.
+disable=SC2002
+
+# Disable SC2106: This only exits the subshell.
+# Subshell-based parallelism in orchestration scripts is intentional.
+disable=SC2106

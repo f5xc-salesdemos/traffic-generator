@@ -58,10 +58,10 @@ while [[ $elapsed -lt $DURATION ]]; do
     echo "${BASE}${ENDPOINTS[$((RANDOM % ${#ENDPOINTS[@]}))]}"
   done | xargs -P"$CONCURRENCY" -I{} \
     curl -sf -o /dev/null -w "%{http_code}\n" --max-time 10 --connect-timeout 5 {} \
-    2>/dev/null > /tmp/self-profile-$$.txt || true
+    2>/dev/null >/tmp/self-profile-$$.txt || true
 
   ok=$(grep -c '^[23]0[0-9]$' /tmp/self-profile-$$.txt 2>/dev/null || echo 0)
-  total=$(wc -l < /tmp/self-profile-$$.txt 2>/dev/null || echo 0)
+  total=$(wc -l </tmp/self-profile-$$.txt 2>/dev/null || echo 0)
   err=$((total - ok))
   TOTAL_OK=$((TOTAL_OK + ok))
   TOTAL_ERR=$((TOTAL_ERR + err))
@@ -118,7 +118,7 @@ fi
 
 FD_LIMIT=$(ulimit -n)
 if [[ "$FD_AFTER" -gt $((FD_LIMIT * 80 / 100)) ]]; then
-  echo "** FILE DESCRIPTOR LIMIT: ${FD_AFTER}/${FD_LIMIT} ($(( FD_AFTER * 100 / FD_LIMIT ))%) **"
+  echo "** FILE DESCRIPTOR LIMIT: ${FD_AFTER}/${FD_LIMIT} ($((FD_AFTER * 100 / FD_LIMIT))%) **"
   echo "   Fix: increase LimitNOFILE in systemd or /etc/security/limits.conf"
 fi
 
@@ -126,7 +126,7 @@ if [[ "$TOTAL_ERR" -eq 0 ]]; then
   echo "NO BOTTLENECKS DETECTED — all ${TOTAL_OK} requests succeeded"
 else
   echo ""
-  echo "Summary: ${TOTAL_OK} OK, ${TOTAL_ERR} errors ($(( TOTAL_ERR * 100 / (TOTAL_OK + TOTAL_ERR) ))% error rate)"
+  echo "Summary: ${TOTAL_OK} OK, ${TOTAL_ERR} errors ($((TOTAL_ERR * 100 / (TOTAL_OK + TOTAL_ERR)))% error rate)"
 fi
 
 echo ""

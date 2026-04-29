@@ -31,7 +31,7 @@ if [[ -z "$WORDLIST" ]]; then
   echo "[+] SecLists not found, creating inline password list..."
   WORDLIST=$(mktemp /tmp/hydra-passwords.XXXXXX)
   trap 'rm -f "${WORDLIST}"' EXIT
-  cat > "${WORDLIST}" <<'PASSEOF'
+  cat >"${WORDLIST}" <<'PASSEOF'
 password
 123456
 12345678
@@ -51,7 +51,7 @@ PASSEOF
 fi
 
 echo "[+] Using password list: ${WORDLIST}"
-PASS_COUNT=$(wc -l < "${WORDLIST}")
+PASS_COUNT=$(wc -l <"${WORDLIST}")
 echo "    Passwords in list: ${PASS_COUNT}"
 echo ""
 

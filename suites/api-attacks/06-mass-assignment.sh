@@ -63,7 +63,7 @@ echo "[+] Authenticating for PUT/PATCH tests..."
 curl -sk -X POST "${BASE}/users/v1/register" \
   -H "Content-Type: application/json" \
   -d '{"username":"massput","password":"Test1234","email":"massput@evil.example"}' \
-  --max-time 10 > /dev/null 2>&1 || true
+  --max-time 10 >/dev/null 2>&1 || true
 
 LOGIN_RESP=$(curl -sk -X POST "${BASE}/users/v1/login" \
   -H "Content-Type: application/json" \

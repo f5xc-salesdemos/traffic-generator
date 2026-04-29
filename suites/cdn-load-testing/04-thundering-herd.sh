@@ -34,7 +34,7 @@ for ep in "${STAMPEDE_ENDPOINTS[@]}"; do
   echo "    Firing $REQUESTS requests at $CONCURRENCY concurrency..."
 
   TMPFILE="/tmp/hey-stampede-$$.txt"
-  hey -n "$REQUESTS" -c "$CONCURRENCY" -t 10 "$URL" > "$TMPFILE" 2>&1
+  hey -n "$REQUESTS" -c "$CONCURRENCY" -t 10 "$URL" >"$TMPFILE" 2>&1
 
   # Parse results
   TOTAL=$(grep "requests in" "$TMPFILE" | awk '{print $1}' || echo "$REQUESTS")

@@ -36,7 +36,7 @@ for suite in "${PARALLEL_SUITES[@]}"; do
   log="/tmp/parallel-stress-${suite}-$$.log"
   LOGS+=("$log")
   echo "[+] Launching: ${suite}"
-  bash "$SUITES_DIR/runner.sh" "$suite" > "$log" 2>&1 &
+  bash "$SUITES_DIR/runner.sh" "$suite" >"$log" 2>&1 &
   PIDS+=($!)
 done
 
@@ -65,7 +65,7 @@ while true; do
 done
 
 end_ns=$(date +%s%N)
-wall_secs=$(( (end_ns - start_ns) / 1000000000 ))
+wall_secs=$(((end_ns - start_ns) / 1000000000))
 
 echo ""
 echo "=== POST-STRESS STATE ==="

@@ -219,9 +219,18 @@ PASS_COUNT=0
 FAIL_COUNT=0
 VULN_COUNT=0
 
-pass() { echo "    [PASS] $*"; PASS_COUNT=$((PASS_COUNT + 1)); }
-fail() { echo "    [FAIL] $*"; FAIL_COUNT=$((FAIL_COUNT + 1)); }
-vuln() { echo "    [VULN] $*"; VULN_COUNT=$((VULN_COUNT + 1)); }
+pass() {
+  echo "    [PASS] $*"
+  PASS_COUNT=$((PASS_COUNT + 1))
+}
+fail() {
+  echo "    [FAIL] $*"
+  FAIL_COUNT=$((FAIL_COUNT + 1))
+}
+vuln() {
+  echo "    [VULN] $*"
+  VULN_COUNT=$((VULN_COUNT + 1))
+}
 
 summary() {
   echo ""

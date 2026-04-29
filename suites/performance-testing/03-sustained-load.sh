@@ -79,7 +79,7 @@ while [[ $elapsed -lt $DURATION_SECS ]]; do
       err_read=$(echo "$socket_errors" | awk -F'read ' '{print $2}' | awk -F',' '{print $1}')
       err_write=$(echo "$socket_errors" | awk -F'write ' '{print $2}' | awk -F',' '{print $1}')
       err_timeout=$(echo "$socket_errors" | awk -F'timeout ' '{print $2}')
-      fail=$(( ${err_connect:-0} + ${err_read:-0} + ${err_write:-0} + ${err_timeout:-0} ))
+      fail=$((${err_connect:-0} + ${err_read:-0} + ${err_write:-0} + ${err_timeout:-0}))
     else
       fail=0
     fi
@@ -100,10 +100,10 @@ while [[ $elapsed -lt $DURATION_SECS ]]; do
       echo "${BASE}${ep}"
     done | xargs -P"$CONCURRENCY" -I{} \
       curl -sf -o /dev/null -w "%{http_code} %{time_total}\n" \
-      --max-time 10 --connect-timeout 5 {} 2>/dev/null > /tmp/sustained-results-$$.txt
+      --max-time 10 --connect-timeout 5 {} 2>/dev/null >/tmp/sustained-results-$$.txt
 
     end_ns=$(date +%s%N)
-    wall_ms=$(( (end_ns - start_ns) / 1000000 ))
+    wall_ms=$(((end_ns - start_ns) / 1000000))
 
     results=$(cat /tmp/sustained-results-$$.txt)
     sent=$(echo "$results" | grep -c . || echo 0)

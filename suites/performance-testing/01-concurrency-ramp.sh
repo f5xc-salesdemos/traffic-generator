@@ -73,12 +73,12 @@ for concurrency in "${CONCURRENCY_LEVELS[@]}"; do
       --max-time 10 --connect-timeout 5 "$url" 2>/dev/null)
 
     end_time=$(date +%s%N)
-    wall_ms=$(( (end_time - start_time) / 1000000 ))
+    wall_ms=$(((end_time - start_time) / 1000000))
 
     total=$(echo "$results" | wc -l)
     success=$(echo "$results" | grep -c '^200 ' || true)
-    failed=$(( total - success ))
-    success_pct=$(( success * 100 / total ))
+    failed=$((total - success))
+    success_pct=$((success * 100 / total))
 
     avg=$(echo "$results" | awk '{sum+=$2; n++} END {if(n>0) printf "%.3f", sum/n; else print "N/A"}')
     p99=$(echo "$results" | awk '{print $2}' | sort -n | awk -v p=99 'BEGIN{c=0} {a[c++]=$1} END{idx=int(c*p/100); if(idx>=c)idx=c-1; printf "%.3f", a[idx]}')

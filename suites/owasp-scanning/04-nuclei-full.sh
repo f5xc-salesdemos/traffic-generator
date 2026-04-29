@@ -20,10 +20,10 @@ echo ""
 NUCLEI_OPTS="-timeout 10 -rate-limit 100 -stats -silent"
 
 TARGETS=(
-    "${BASE}"
-    "${BASE}/juice-shop/"
-    "${BASE}/dvwa/"
-    "${BASE}/vampi/"
+  "${BASE}"
+  "${BASE}/juice-shop/"
+  "${BASE}/dvwa/"
+  "${BASE}/vampi/"
 )
 
 ########################################################################
@@ -33,10 +33,10 @@ echo "[*] Phase 1: Full severity scan across all targets"
 echo "----------------------------------------"
 
 for url in "${TARGETS[@]}"; do
-    echo ""
-    echo "[*] Scanning: ${url}"
-    nuclei -u "${url}" -severity info,low,medium,high,critical \
-        ${NUCLEI_OPTS} 2>&1 || true
+  echo ""
+  echo "[*] Scanning: ${url}"
+  nuclei -u "${url}" -severity info,low,medium,high,critical \
+    ${NUCLEI_OPTS} 2>&1 || true
 done
 
 ########################################################################
@@ -47,10 +47,10 @@ echo "[*] Phase 2: Known CVE templates"
 echo "----------------------------------------"
 
 for url in "${TARGETS[@]}"; do
-    echo ""
-    echo "[*] CVE scan: ${url}"
-    nuclei -u "${url}" -tags cve \
-        ${NUCLEI_OPTS} 2>&1 || true
+  echo ""
+  echo "[*] CVE scan: ${url}"
+  nuclei -u "${url}" -tags cve \
+    ${NUCLEI_OPTS} 2>&1 || true
 done
 
 ########################################################################
@@ -61,10 +61,10 @@ echo "[*] Phase 3: OWASP category templates"
 echo "----------------------------------------"
 
 for url in "${TARGETS[@]}"; do
-    echo ""
-    echo "[*] OWASP scan: ${url}"
-    nuclei -u "${url}" -tags owasp \
-        ${NUCLEI_OPTS} 2>&1 || true
+  echo ""
+  echo "[*] OWASP scan: ${url}"
+  nuclei -u "${url}" -tags owasp \
+    ${NUCLEI_OPTS} 2>&1 || true
 done
 
 ########################################################################
@@ -75,10 +75,10 @@ echo "[*] Phase 4: Injection templates (sqli, xss, ssrf, lfi)"
 echo "----------------------------------------"
 
 for url in "${TARGETS[@]}"; do
-    echo ""
-    echo "[*] Injection scan: ${url}"
-    nuclei -u "${url}" -tags sqli,xss,ssrf,lfi \
-        ${NUCLEI_OPTS} 2>&1 || true
+  echo ""
+  echo "[*] Injection scan: ${url}"
+  nuclei -u "${url}" -tags sqli,xss,ssrf,lfi \
+    ${NUCLEI_OPTS} 2>&1 || true
 done
 
 ########################################################################
@@ -89,10 +89,10 @@ echo "[*] Phase 5: Exposure and misconfiguration templates"
 echo "----------------------------------------"
 
 for url in "${TARGETS[@]}"; do
-    echo ""
-    echo "[*] Exposure/misconfig scan: ${url}"
-    nuclei -u "${url}" -tags exposure,misconfig \
-        ${NUCLEI_OPTS} 2>&1 || true
+  echo ""
+  echo "[*] Exposure/misconfig scan: ${url}"
+  nuclei -u "${url}" -tags exposure,misconfig \
+    ${NUCLEI_OPTS} 2>&1 || true
 done
 
 ########################################################################

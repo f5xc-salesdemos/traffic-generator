@@ -34,14 +34,14 @@ echo "[+] Starting sustained wrk load..."
 WRK_LOG="/tmp/cdn-sustained-wrk-$$.log"
 if command -v wrk >/dev/null 2>&1 && [ -f "$LUA_SCRIPT" ]; then
   wrk -t"$THREADS" -c"$CONNS" -d"${DURATION}s" --timeout 10s \
-    -s "$LUA_SCRIPT" "${BASE}/" > "$WRK_LOG" 2>&1 &
+    -s "$LUA_SCRIPT" "${BASE}/" >"$WRK_LOG" 2>&1 &
   WRK_PID=$!
   echo "    wrk PID: $WRK_PID"
 else
   echo "    [WARN] wrk not available, using hey fallback"
   hey -z "${DURATION}s" -c "$CONNS" \
     -H "X-Forwarded-For: $(rand_ip)" \
-    "${BASE}/juice-shop/" > "$WRK_LOG" 2>&1 &
+    "${BASE}/juice-shop/" >"$WRK_LOG" 2>&1 &
   WRK_PID=$!
 fi
 echo ""
@@ -86,14 +86,17 @@ while true; do
   printf " %5ss" "$ELAPSED"
 
   for ep in "${MONITOR_ENDPOINTS[@]}"; do
-    HIT=0; MISS=0; STALE=0; OTHER=0
+    HIT=0
+    MISS=0
+    STALE=0
+    OTHER=0
     for s in $(seq 1 "$SAMPLES_PER_CHECK"); do
       STATUS=$(check_cache_status "${BASE}${ep}")
       case "$STATUS" in
-        HIT)      HIT=$((HIT + 1)) ;;
-        MISS)     MISS=$((MISS + 1)) ;;
-        STALE|UPDATING|EXPIRED) STALE=$((STALE + 1)) ;;
-        *)        OTHER=$((OTHER + 1)) ;;
+        HIT) HIT=$((HIT + 1)) ;;
+        MISS) MISS=$((MISS + 1)) ;;
+        STALE | UPDATING | EXPIRED) STALE=$((STALE + 1)) ;;
+        *) OTHER=$((OTHER + 1)) ;;
       esac
     done
     TOTAL_HIT=$((TOTAL_HIT + HIT))

@@ -16,7 +16,7 @@ echo "[+] Fuzzing API endpoints with ffuf..."
 
 # Create a temporary wordlist of common API paths
 WORDLIST=$(mktemp /tmp/ffuf-api-wordlist.XXXXXX)
-cat > "$WORDLIST" << 'EOF'
+cat >"$WORDLIST" <<'EOF'
 api
 api/v1
 api/v2
@@ -71,7 +71,7 @@ echo ""
 echo "[+] Fuzzing HTTP methods..."
 
 METHODS_FILE=$(mktemp /tmp/ffuf-methods.XXXXXX)
-cat > "$METHODS_FILE" << 'EOF'
+cat >"$METHODS_FILE" <<'EOF'
 GET
 POST
 PUT

@@ -17,21 +17,21 @@ ZAP_PID=""
 REPORT_DIR="/tmp"
 
 APPS=(
-    "/juice-shop/"
-    "/dvwa/"
-    "/vampi/"
-    "/httpbin/"
-    "/csd-demo/"
+  "/juice-shop/"
+  "/dvwa/"
+  "/vampi/"
+  "/httpbin/"
+  "/csd-demo/"
 )
 
 cleanup() {
-    if [[ -n "${ZAP_PID}" ]]; then
-        echo "[*] Shutting down ZAP (PID ${ZAP_PID})..."
-        curl -s "${ZAP_API}/JSON/core/action/shutdown/" >/dev/null 2>&1 || true
-        sleep 2
-        kill "${ZAP_PID}" 2>/dev/null || true
-        wait "${ZAP_PID}" 2>/dev/null || true
-    fi
+  if [[ -n "${ZAP_PID}" ]]; then
+    echo "[*] Shutting down ZAP (PID ${ZAP_PID})..."
+    curl -s "${ZAP_API}/JSON/core/action/shutdown/" >/dev/null 2>&1 || true
+    sleep 2
+    kill "${ZAP_PID}" 2>/dev/null || true
+    wait "${ZAP_PID}" 2>/dev/null || true
+  fi
 }
 trap cleanup EXIT
 
@@ -46,25 +46,25 @@ echo ""
 ########################################################################
 echo "[*] Starting ZAP daemon on port ${ZAP_PORT}..."
 JVM_ARGS="-Xmx512m" zap -daemon -port "${ZAP_PORT}" \
-    -config api.disablekey=true \
-    -config spider.maxDuration=3 \
-    -config scanner.maxScanDurationInMins=5 &
+  -config api.disablekey=true \
+  -config spider.maxDuration=3 \
+  -config scanner.maxScanDurationInMins=5 &
 ZAP_PID=$!
 
 # Wait for ZAP to become ready (up to 90 seconds)
 echo "[*] Waiting for ZAP to start..."
 ZAP_READY=0
 for i in $(seq 1 30); do
-    if curl -s "${ZAP_API}/JSON/core/view/version/" >/dev/null 2>&1; then
-        ZAP_READY=1
-        break
-    fi
-    sleep 3
+  if curl -s "${ZAP_API}/JSON/core/view/version/" >/dev/null 2>&1; then
+    ZAP_READY=1
+    break
+  fi
+  sleep 3
 done
 
 if [[ "${ZAP_READY}" -eq 0 ]]; then
-    echo "[!] ZAP failed to start within 90 seconds. Aborting."
-    exit 1
+  echo "[!] ZAP failed to start within 90 seconds. Aborting."
+  exit 1
 fi
 
 ZAP_VERSION=$(curl -s "${ZAP_API}/JSON/core/view/version/" 2>/dev/null || echo "unknown")
@@ -76,26 +76,26 @@ echo "[*] ZAP is ready. Version: ${ZAP_VERSION}"
 echo ""
 echo "[*] Phase 1: Spidering all applications..."
 for app in "${APPS[@]}"; do
-    APP_URL="${BASE}${app}"
-    echo ""
-    echo "[*] Spidering: ${APP_URL}"
+  APP_URL="${BASE}${app}"
+  echo ""
+  echo "[*] Spidering: ${APP_URL}"
 
-    SCAN_ID=$(curl -s "${ZAP_API}/JSON/spider/action/scan/?url=${APP_URL}&maxChildren=100&recurse=true" \
-        | python3 -c "import sys,json; print(json.load(sys.stdin).get('scan','0'))" 2>/dev/null || echo "0")
+  SCAN_ID=$(curl -s "${ZAP_API}/JSON/spider/action/scan/?url=${APP_URL}&maxChildren=100&recurse=true" \
+    | python3 -c "import sys,json; print(json.load(sys.stdin).get('scan','0'))" 2>/dev/null || echo "0")
 
-    # Wait for spider to finish (max 180s)
-    for j in $(seq 1 60); do
-        STATUS=$(curl -s "${ZAP_API}/JSON/spider/view/status/?scanId=${SCAN_ID}" \
-            | python3 -c "import sys,json; print(json.load(sys.stdin).get('status','100'))" 2>/dev/null || echo "100")
-        if [[ "${STATUS}" -ge 100 ]]; then
-            break
-        fi
-        if (( j % 5 == 0 )); then
-            echo "    Spider progress: ${STATUS}%"
-        fi
-        sleep 3
-    done
-    echo "    Spider complete for ${app}"
+  # Wait for spider to finish (max 180s)
+  for j in $(seq 1 60); do
+    STATUS=$(curl -s "${ZAP_API}/JSON/spider/view/status/?scanId=${SCAN_ID}" \
+      | python3 -c "import sys,json; print(json.load(sys.stdin).get('status','100'))" 2>/dev/null || echo "100")
+    if [[ "${STATUS}" -ge 100 ]]; then
+      break
+    fi
+    if ((j % 5 == 0)); then
+      echo "    Spider progress: ${STATUS}%"
+    fi
+    sleep 3
+  done
+  echo "    Spider complete for ${app}"
 done
 
 # Also spider the root
@@ -110,13 +110,13 @@ sleep 10
 echo ""
 echo "[*] Waiting for passive scan queue to drain..."
 for k in $(seq 1 30); do
-    RECORDS=$(curl -s "${ZAP_API}/JSON/pscan/view/recordsToScan/" \
-        | python3 -c "import sys,json; print(json.load(sys.stdin).get('recordsToScan','0'))" 2>/dev/null || echo "0")
-    if [[ "${RECORDS}" -eq 0 ]]; then
-        break
-    fi
-    echo "    Records remaining: ${RECORDS}"
-    sleep 3
+  RECORDS=$(curl -s "${ZAP_API}/JSON/pscan/view/recordsToScan/" \
+    | python3 -c "import sys,json; print(json.load(sys.stdin).get('recordsToScan','0'))" 2>/dev/null || echo "0")
+  if [[ "${RECORDS}" -eq 0 ]]; then
+    break
+  fi
+  echo "    Records remaining: ${RECORDS}"
+  sleep 3
 done
 
 ########################################################################
@@ -127,14 +127,14 @@ echo "[*] Phase 2: Running active scans..."
 ACTIVE_SCAN_IDS=()
 
 for app in "${APPS[@]}"; do
-    APP_URL="${BASE}${app}"
-    echo ""
-    echo "[*] Active scanning: ${APP_URL}"
+  APP_URL="${BASE}${app}"
+  echo ""
+  echo "[*] Active scanning: ${APP_URL}"
 
-    ASCAN_ID=$(curl -s "${ZAP_API}/JSON/ascan/action/scan/?url=${APP_URL}&recurse=true&inScopeOnly=false&scanPolicyName=&method=&postData=" \
-        | python3 -c "import sys,json; print(json.load(sys.stdin).get('scan','0'))" 2>/dev/null || echo "0")
-    ACTIVE_SCAN_IDS+=("${ASCAN_ID}")
-    echo "    Active scan ID: ${ASCAN_ID}"
+  ASCAN_ID=$(curl -s "${ZAP_API}/JSON/ascan/action/scan/?url=${APP_URL}&recurse=true&inScopeOnly=false&scanPolicyName=&method=&postData=" \
+    | python3 -c "import sys,json; print(json.load(sys.stdin).get('scan','0'))" 2>/dev/null || echo "0")
+  ACTIVE_SCAN_IDS+=("${ASCAN_ID}")
+  echo "    Active scan ID: ${ASCAN_ID}"
 done
 
 # Wait for all active scans to complete
@@ -142,26 +142,26 @@ echo ""
 echo "[*] Waiting for active scans to complete..."
 ALL_DONE=0
 for attempt in $(seq 1 120); do
-    ALL_DONE=1
-    for sid in "${ACTIVE_SCAN_IDS[@]}"; do
-        STATUS=$(curl -s "${ZAP_API}/JSON/ascan/view/status/?scanId=${sid}" \
-            | python3 -c "import sys,json; print(json.load(sys.stdin).get('status','100'))" 2>/dev/null || echo "100")
-        if [[ "${STATUS}" -lt 100 ]]; then
-            ALL_DONE=0
-            break
-        fi
-    done
-    if [[ "${ALL_DONE}" -eq 1 ]]; then
-        break
+  ALL_DONE=1
+  for sid in "${ACTIVE_SCAN_IDS[@]}"; do
+    STATUS=$(curl -s "${ZAP_API}/JSON/ascan/view/status/?scanId=${sid}" \
+      | python3 -c "import sys,json; print(json.load(sys.stdin).get('status','100'))" 2>/dev/null || echo "100")
+    if [[ "${STATUS}" -lt 100 ]]; then
+      ALL_DONE=0
+      break
     fi
-    if (( attempt % 10 == 0 )); then
-        echo "    Active scan in progress... (${attempt}0s elapsed)"
-    fi
-    sleep 10
+  done
+  if [[ "${ALL_DONE}" -eq 1 ]]; then
+    break
+  fi
+  if ((attempt % 10 == 0)); then
+    echo "    Active scan in progress... (${attempt}0s elapsed)"
+  fi
+  sleep 10
 done
 
 if [[ "${ALL_DONE}" -eq 0 ]]; then
-    echo "[!] Active scans did not complete within the timeout. Fetching partial results."
+  echo "[!] Active scans did not complete within the timeout. Fetching partial results."
 fi
 
 echo "[*] Active scanning complete."
@@ -223,7 +223,7 @@ except Exception as e:
 
 # Generate HTML report
 curl -s "${ZAP_API}/OTHER/core/other/htmlreport/" \
-    -o "${REPORT_DIR}/zap-active-scan-report.html" 2>/dev/null || true
+  -o "${REPORT_DIR}/zap-active-scan-report.html" 2>/dev/null || true
 
 echo ""
 echo "[*] Report: ${REPORT_DIR}/zap-active-scan-report.html"

@@ -21,7 +21,7 @@ for i in $(seq "$REQUESTS"); do
   results_ka="${results_ka}${t}\n"
 done
 end_ns=$(date +%s%N)
-wall_ka=$(( (end_ns - start_ns) / 1000000 ))
+wall_ka=$(((end_ns - start_ns) / 1000000))
 
 avg_ka=$(printf "%b" "$results_ka" | grep -v ERR | awk '{sum+=$1; n++} END {if(n>0) printf "%.4f", sum/n; else print "N/A"}')
 errs_ka=$(printf "%b" "$results_ka" | grep -c ERR || true)
@@ -39,7 +39,7 @@ for i in $(seq "$REQUESTS"); do
   results_nk="${results_nk}${t}\n"
 done
 end_ns=$(date +%s%N)
-wall_nk=$(( (end_ns - start_ns) / 1000000 ))
+wall_nk=$(((end_ns - start_ns) / 1000000))
 
 avg_nk=$(printf "%b" "$results_nk" | grep -v ERR | awk '{sum+=$1; n++} END {if(n>0) printf "%.4f", sum/n; else print "N/A"}')
 errs_nk=$(printf "%b" "$results_nk" | grep -c ERR || true)

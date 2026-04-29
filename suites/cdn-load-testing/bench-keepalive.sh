@@ -37,7 +37,7 @@ NETDEV_BACKLOG=$((NCPU * 8192))
 [ "$NETDEV_BACKLOG" -gt 131072 ] && NETDEV_BACKLOG=131072
 FILE_MAX=$((NCPU * 262144))
 TW_BUCKETS=$((NCPU * 250000))
-NET_MEM_MAX=$(( (TOTAL_RAM_MB / 4) * 1024 * 1024 ))
+NET_MEM_MAX=$(((TOTAL_RAM_MB / 4) * 1024 * 1024))
 [ "$NET_MEM_MAX" -gt 67108864 ] && NET_MEM_MAX=67108864
 
 sudo sysctl -w net.core.somaxconn=$SOMAXCONN >/dev/null 2>&1
@@ -67,7 +67,7 @@ ulimit -n 524288 2>/dev/null || ulimit -n 65535 2>/dev/null || true
 NIC=$(ip -o link show | awk -F': ' '/state UP/ && !/lo/{print $2; exit}')
 RPS_STATUS="N/A"
 if [ -n "$NIC" ]; then
-  RPS_MASK=$(printf '%x' $(( (1 << NCPU) - 1 )))
+  RPS_MASK=$(printf '%x' $(((1 << NCPU) - 1)))
   RFS_ENTRIES=$((32768 * NCPU))
   echo "$RFS_ENTRIES" | sudo tee /proc/sys/net/core/rps_sock_flow_entries >/dev/null 2>&1
   for rxq in /sys/class/net/"$NIC"/queues/rx-*/rps_cpus; do
@@ -165,7 +165,7 @@ for ep in "${ENDPOINTS[@]}"; do
     -H "Connection: keep-alive" \
     -H "X-Forwarded-For: 198.51.100.$((RANDOM % 256))" \
     -H "Accept-Encoding: gzip" \
-    "${BASE}${ep}" > "$RESULTS/t1-wrk-$(echo "$ep" | tr '/' '_').log" 2>&1 &
+    "${BASE}${ep}" >"$RESULTS/t1-wrk-$(echo "$ep" | tr '/' '_').log" 2>&1 &
 done
 wait
 
@@ -206,7 +206,7 @@ LUA_CONNS=$((WRK_CONNS_PER_EP * 4))
 
 if [ -f "$LUA_SCRIPT" ]; then
   wrk -t"$WRK_THREADS" -c"$LUA_CONNS" -d"${DURATION}s" --timeout 10s \
-    -s "$LUA_SCRIPT" "${BASE}/" > "$RESULTS/t2-wrk-lua.log" 2>&1
+    -s "$LUA_SCRIPT" "${BASE}/" >"$RESULTS/t2-wrk-lua.log" 2>&1
   T2_RPS=$(grep "Requests/sec" "$RESULTS/t2-wrk-lua.log" 2>/dev/null | awk '{printf "%.0f", $2}')
   T2_LAT=$(grep "Latency" "$RESULTS/t2-wrk-lua.log" 2>/dev/null | awk '{print $2}')
   T2_XFER=$(grep "Transfer/sec" "$RESULTS/t2-wrk-lua.log" 2>/dev/null | awk '{print $2}')
@@ -238,7 +238,7 @@ for ep in "/juice-shop/" "/httpbin/get" "/whoami/" "/vampi/users/v1"; do
     -H "Connection: keep-alive" \
     -H "X-Forwarded-For: 203.0.113.$((RANDOM % 256))" \
     -H "Accept-Encoding: gzip" \
-    "${BASE}${ep}" > "$RESULTS/t3-hey-$(echo "$ep" | tr '/' '_').log" 2>&1 &
+    "${BASE}${ep}" >"$RESULTS/t3-hey-$(echo "$ep" | tr '/' '_').log" 2>&1 &
 done
 wait
 
@@ -270,11 +270,11 @@ for rate_mult in 1 2 4 8; do
   echo "GET ${BASE}/httpbin/get
 X-Forwarded-For: 192.0.2.$((RANDOM % 256))
 Accept-Encoding: gzip
-Connection: keep-alive" > "$RESULTS/t4-vegeta-targets.txt"
+Connection: keep-alive" >"$RESULTS/t4-vegeta-targets.txt"
 
   vegeta attack -rate="${RATE}/s" -duration=30s -timeout=10s -keepalive \
     -targets="$RESULTS/t4-vegeta-targets.txt" 2>/dev/null \
-    | vegeta report > "$RESULTS/t4-vegeta-${RATE}rps.log" 2>&1
+    | vegeta report >"$RESULTS/t4-vegeta-${RATE}rps.log" 2>&1
   SUCCESS=$(grep "Success" "$RESULTS/t4-vegeta-${RATE}rps.log" 2>/dev/null | head -1 | awk '{print $3}')
   ACTUAL=$(grep "Throughput" "$RESULTS/t4-vegeta-${RATE}rps.log" 2>/dev/null | awk '{printf "%.0f", $2}')
   P99=$(grep "99th" "$RESULTS/t4-vegeta-${RATE}rps.log" 2>/dev/null | awk '{print $2}')
@@ -301,14 +301,14 @@ for ep in "${ENDPOINTS[@]}"; do
     -H "Connection: keep-alive" \
     -H "X-Forwarded-For: 192.0.2.$((RANDOM % 256))" \
     -H "Accept-Encoding: gzip" \
-    "${BASE}${ep}" > "$RESULTS/t5-wrk-$(echo "$ep" | tr '/' '_').log" 2>&1 &
+    "${BASE}${ep}" >"$RESULTS/t5-wrk-$(echo "$ep" | tr '/' '_').log" 2>&1 &
   ALL_PIDS="$ALL_PIDS $!"
 done
 
 # wrk Lua (persistent, randomized paths reuse same connections)
 if [ -f "$LUA_SCRIPT" ]; then
   wrk -t"$WRK_THREADS" -c"$LUA_CONNS" -d"${KRAKEN_DUR}s" --timeout 10s \
-    -s "$LUA_SCRIPT" "${BASE}/" > "$RESULTS/t5-wrk-lua.log" 2>&1 &
+    -s "$LUA_SCRIPT" "${BASE}/" >"$RESULTS/t5-wrk-lua.log" 2>&1 &
   ALL_PIDS="$ALL_PIDS $!"
 fi
 
@@ -318,7 +318,7 @@ for ep in "/juice-shop/" "/httpbin/get" "/whoami/" "/vampi/users/v1"; do
     -H "Connection: keep-alive" \
     -H "X-Forwarded-For: 198.51.100.$((RANDOM % 256))" \
     -H "Accept-Encoding: gzip" \
-    "${BASE}${ep}" > "$RESULTS/t5-hey-$(echo "$ep" | tr '/' '_').log" 2>&1 &
+    "${BASE}${ep}" >"$RESULTS/t5-hey-$(echo "$ep" | tr '/' '_').log" 2>&1 &
   ALL_PIDS="$ALL_PIDS $!"
 done
 
@@ -327,11 +327,11 @@ for ep in "/juice-shop/" "/httpbin/get" "/dvwa/login.php"; do
   echo "GET ${BASE}${ep}
 X-Forwarded-For: 203.0.113.$((RANDOM % 256))
 Accept-Encoding: gzip
-Connection: keep-alive" > "$RESULTS/t5-vegeta-targets-$(echo "$ep" | tr '/' '_').txt"
+Connection: keep-alive" >"$RESULTS/t5-vegeta-targets-$(echo "$ep" | tr '/' '_').txt"
 
   vegeta attack -rate="${VEGETA_RATE}/s" -duration="${KRAKEN_DUR}s" -timeout=10s -keepalive \
     -targets="$RESULTS/t5-vegeta-targets-$(echo "$ep" | tr '/' '_').txt" 2>/dev/null \
-    | vegeta encode > "$RESULTS/t5-vegeta-$(echo "$ep" | tr '/' '_').bin" &
+    | vegeta encode >"$RESULTS/t5-vegeta-$(echo "$ep" | tr '/' '_').bin" &
   ALL_PIDS="$ALL_PIDS $!"
 done
 
@@ -339,12 +339,12 @@ done
 ab -n 999999 -c "$AB_CONNS" -k -t "$KRAKEN_DUR" -s 10 \
   -H "X-Forwarded-For: 192.0.2.$((RANDOM % 256))" \
   -H "Accept-Encoding: gzip" \
-  "${BASE}/juice-shop/" > "$RESULTS/t5-ab-juice.log" 2>&1 &
+  "${BASE}/juice-shop/" >"$RESULTS/t5-ab-juice.log" 2>&1 &
 ALL_PIDS="$ALL_PIDS $!"
 ab -n 999999 -c "$AB_CONNS" -k -t "$KRAKEN_DUR" -s 10 \
   -H "X-Forwarded-For: 198.51.100.$((RANDOM % 256))" \
   -H "Accept-Encoding: gzip" \
-  "${BASE}/httpbin/get" > "$RESULTS/t5-ab-httpbin.log" 2>&1 &
+  "${BASE}/httpbin/get" >"$RESULTS/t5-ab-httpbin.log" 2>&1 &
 ALL_PIDS="$ALL_PIDS $!"
 
 # Monitor
@@ -392,7 +392,7 @@ done
 T5_VEGETA_RPS=0
 for f in "$RESULTS"/t5-vegeta-*.bin; do
   [ -f "$f" ] || continue
-  RPS=$(vegeta report < "$f" 2>/dev/null | grep "Throughput" | awk '{printf "%.0f", $2}')
+  RPS=$(vegeta report <"$f" 2>/dev/null | grep "Throughput" | awk '{printf "%.0f", $2}')
   T5_VEGETA_RPS=$((T5_VEGETA_RPS + ${RPS:-0}))
 done
 

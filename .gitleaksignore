@@ -1,0 +1,11 @@
+# False positives: test/demo credentials used in attack simulation scripts
+# docs/05-suites.mdx: generic-api-key (example API key in documentation)
+/github/workspace/docs/05-suites.mdx:generic-api-key:73
+docs/05-suites.mdx:generic-api-key:73
+# suites/api-attacks/05-broken-auth.sh: FAKE_JWT and EXPIRED_JWT (test tokens)
+/github/workspace/suites/api-attacks/05-broken-auth.sh:jwt:31
+/github/workspace/suites/api-attacks/05-broken-auth.sh:jwt:32
+suites/api-attacks/05-broken-auth.sh:jwt:31
+suites/api-attacks/05-broken-auth.sh:jwt:32
+# suites/crapi-exploits/14-unauth-order-access.sh: curl auth header with intentional invalid token
+suites/crapi-exploits/14-unauth-order-access.sh:curl-auth-header:99

@@ -66,7 +66,7 @@ for w in $(seq 1 "$WORKER_COUNT"); do
         SUCCESS=$((SUCCESS + 1))
       fi
     done
-    echo "$SUCCESS" > "$TMPDIR/result-${w}.txt"
+    echo "$SUCCESS" >"$TMPDIR/result-${w}.txt"
     rm -f "$JAR"
   ) &
 
