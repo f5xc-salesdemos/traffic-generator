@@ -12,7 +12,6 @@ skip-path:
   - specs/discovered
   - specs/raw
   - specs/original
-  - suites
   # Install-verification dockerfiles are test harnesses, not production
   # images — CKV_DOCKER_2 (HEALTHCHECK) and CKV_DOCKER_3 (non-root user)
   # are not meaningful for ephemeral CI validation containers.
@@ -33,11 +32,3 @@ skip-check:
   - CKV_GHA_7    # GitHub Actions — allow pinning to branch refs
   - CKV2_GHA_1   # GitHub Actions — immutable actions (covered by Dependabot)
   - "CKV_SECRET_4:.*specifications/api/.*\\.json$"
-  - CKV_AZURE_10   # Lab NSG — SSH open for demo access
-  - CKV_AZURE_50   # Lab VM — no extensions required
-  - CKV_AZURE_93   # Lab VM — platform-managed encryption sufficient
-  - CKV_AZURE_119  # Lab NIC — public IP required for demo access
-  - CKV_AZURE_149  # Lab VM — persistent OS disk for cloud-init config
-  - CKV_AZURE_160  # Lab NSG — HTTP port 80 required for traffic
-  - CKV_AZURE_220  # Lab NSG — SSH open for demo access
-  - CKV2_AZURE_31  # Lab subnet — NSG associated at NIC level
