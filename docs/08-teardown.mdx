@@ -1,6 +1,6 @@
 ---
 title: Teardown
-description: "terraform destroy to remove all Azure resources (rg-traffic-generator), verify resource group deletion with az CLI, clean local state files, and stop ongoing billing at approximately $140 USD/month"
+description: "terraform destroy to remove all Azure resources (rg-traffic-generator), verify resource group deletion with az CLI, clean local state files, and stop ongoing billing at approximately $389 USD/month"
 sidebar:
   order: 8
 ---
@@ -9,9 +9,11 @@ When the lab session is complete, destroy all Azure resources to stop billing.
 
 ## Terraform Destroy
 
-From the directory containing the Terraform configuration:
+From the `terraform/` directory:
 
 ```bash
+cd terraform/
+
 terraform plan -destroy
 
 terraform destroy
@@ -66,8 +68,8 @@ These F5 XC resources do not incur Azure costs but should be cleaned up when the
 
 ## Cost Reference
 
-While running, the traffic generator costs approximately **$140 USD/month** (Standard_D4s_v3 VM + Public IP + Premium SSD). After `terraform destroy`, all charges stop. There are no residual costs from deleted resources.
+While running, the traffic generator costs approximately **$389 USD/month** (Standard_F16s_v2 VM + Public IP + Premium SSD). After `terraform destroy`, all charges stop. There are no residual costs from deleted resources.
 
 :::tip
-For recurring demo use, consider scripting the full lifecycle: `terraform apply` before a demo, run suites, then `terraform destroy` afterward. The standard tier provisions in 15-20 minutes, making same-day setup and teardown practical.
+For recurring demo use, consider scripting the full lifecycle: `cd terraform && terraform apply` before a demo, run suites, then `terraform destroy` afterward. The standard tier provisions in 15-20 minutes, making same-day setup and teardown practical.
 :::

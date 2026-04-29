@@ -1,0 +1,9 @@
+# Terraform files staged into docs/_data/ at build time
+# Used by remark-code-import for DRY code blocks in MDX
+terraform/main.tf
+terraform/variables.tf
+terraform/network.tf
+terraform/vm.tf
+terraform/outputs.tf
+terraform/cloud-init.yaml
+terraform/terraform.tfvars.example

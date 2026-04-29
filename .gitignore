@@ -59,10 +59,13 @@ wheels/
 vendor/
 
 # Terraform
+terraform.tfvars
 .terraform/
 .terraform.lock.hcl
 *.tfstate
 *.tfstate.*
+tfplan
+*.tfplan
 crash.log
 override.tf
 override.tf.json

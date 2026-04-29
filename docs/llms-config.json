@@ -1,6 +1,11 @@
 {
   "customSets": [
     {
+      "label": "Deployment",
+      "description": "Terraform IaC deployment with all configuration files",
+      "paths": ["02-prerequisites*", "03-deploy*", "08-teardown*"]
+    },
+    {
       "label": "Traffic Suites",
       "description": "Attack traffic suite scripts and runner usage",
       "paths": ["05-suites*", "06-runner*"]

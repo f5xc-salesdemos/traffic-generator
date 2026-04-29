@@ -1,130 +1,84 @@
 ---
 title: Deploy
-description: "Complete Terraform deployment walkthrough for the traffic generator Azure VM: clone, configure terraform.tfvars, apply, wait for cloud-init provisioning (15-25 minutes), and verify all 50+ security tools are installed and operational"
+description: "Terraform IaC deployment of the traffic generator Azure VM — F-series compute-optimized VM with Ubuntu 24.04, kernel tuning, 50+ security tools, and 17 traffic suites provisioned via cloud-init. All configuration files are in the terraform/ directory."
 sidebar:
   order: 3
 ---
 
-## Directory Setup
-
-Clone the repository and enter the working directory:
+All Terraform files are in the [`terraform/`](https://github.com/f5xc-salesdemos/traffic-generator/tree/main/terraform) directory. Clone the repository and deploy directly:
 
 ```bash
 git clone https://github.com/f5xc-salesdemos/traffic-generator.git
-cd traffic-generator
+cd traffic-generator/terraform
+cp terraform.tfvars.example terraform.tfvars
+# Edit terraform.tfvars with your Azure subscription ID and target FQDN
 ```
 
 ## Terraform Configuration
 
-### Variables
+### Provider and Variables
 
-The following variables control the deployment. Only `subscription_id` and `target_fqdn` are required:
+`main.tf` configures the Azure provider:
 
-```hcl
-variable "subscription_id" {
-  description = "Azure subscription ID"
-  type        = string
-}
-
-variable "target_fqdn" {
-  description = "Target FQDN (F5 XC load balancer domain)"
-  type        = string
-}
-
-variable "resource_group_name" {
-  description = "Name for the Azure resource group"
-  type        = string
-  default     = "rg-traffic-generator"
-}
-
-variable "location" {
-  description = "Azure region for all resources"
-  type        = string
-  default     = "eastus2"
-}
-
-variable "vm_size" {
-  description = "Azure VM size (Standard_D4s_v3 provides 4 vCPU, 16 GiB RAM)"
-  type        = string
-  default     = "Standard_D4s_v3"
-}
-
-variable "admin_username" {
-  description = "SSH admin username for the VM"
-  type        = string
-  default     = "azureuser"
-}
-
-variable "ssh_public_key_path" {
-  description = "Path to the SSH public key file"
-  type        = string
-  default     = "~/.ssh/id_ed25519.pub"
-}
-
-variable "target_origin_ip" {
-  description = "Direct origin IP for baseline testing (bypasses F5 XC)"
-  type        = string
-  default     = ""
-}
-
-variable "install_tier" {
-  description = "Installation tier: standard or full (adds ZAP and Metasploit)"
-  type        = string
-  default     = "standard"
-}
-
-variable "environment_tag" {
-  description = "Environment tag applied to all resources"
-  type        = string
-  default     = "lab"
-}
+```hcl file=../terraform/main.tf
 ```
 
-### Configure Variables
+`variables.tf` defines all configurable parameters. The `vm_size` default is `Standard_F16s_v2` (16 vCPU compute-optimized) — see [VM Sizing](#vm-sizing) for scaling guidance:
 
-Copy the example variables file and fill in your values:
-
-```bash
-cp terraform.tfvars.example terraform.tfvars
+```hcl file=../terraform/variables.tf
 ```
 
-Edit `terraform.tfvars`:
+### Network Infrastructure
 
-```hcl
-subscription_id     = "00000000-0000-0000-0000-000000000000"
-target_fqdn         = "demo.example.com"
-resource_group_name = "rg-traffic-generator"
-location            = "eastus2"
-vm_size             = "Standard_D4s_v3"
-admin_username      = "azureuser"
-ssh_public_key_path = "~/.ssh/id_ed25519.pub"
-install_tier        = "standard"
-environment_tag     = "lab"
+`network.tf` creates the VNet, subnet, public IP, NSG (port 22 SSH), and NIC:
+
+```hcl file=../terraform/network.tf
+```
+
+### Virtual Machine with Cloud-Init
+
+`vm.tf` creates the Ubuntu 24.04 VM and passes the cloud-init template with target and tooling variables:
+
+```hcl file=../terraform/vm.tf
+```
+
+### Cloud-Init Provisioning
+
+`cloud-init.yaml` is the production-validated configuration verified under 48+ hours of continuous load testing including 4 rounds of origin torture testing. It provisions:
+
+- **Kernel tuning** — `somaxconn=131072`, `tcp_max_tw_buckets=4000000`, `tcp_fin_timeout=5`, 64 MiB socket buffers, `file-max=4194304`
+- **NIC optimization** — RPS/RFS across all cores, maximized ring buffers via ethtool, THP=always
+- **APT packages** — nikto, nmap, masscan, sqlmap, hydra, medusa, ncrack, tshark, hping3, tcpdump, netcat, ngrep, iperf3, mtr, sslscan, socat, dirb, whatweb, wrk, hey, vegeta, ethtool
+- **GitHub Releases** — nuclei, dalfox, ffuf, gobuster, feroxbuster, subfinder, httpx, amass
+- **Python packages** — mitmproxy, sslyze, dnsrecon, fierce, theHarvester, playwright, scapy, impacket, arjun
+- **Node.js 20.x** — Puppeteer with stealth plugin for bot simulation
+- **Browser automation** — Playwright Chromium for headless browser testing
+- **Git clones** — testssl.sh, recon-ng, spiderfoot, SecLists
+- **Suite deployment** — 17 traffic suites cloned from this repository to `/opt/traffic-generator/suites/`
+- **Config file** — `config.env` with `TARGET_FQDN`, `TARGET_ORIGIN_IP`, and `CRAPI_PORT`
+
+The cloud-init uses Terraform template variables: `${target_fqdn}`, `${target_origin_ip}`, and `${tool_tier}`. Shell variables like `$NPROC` are escaped as `$$NPROC` in the Terraform templatefile.
+
+```yaml file=../terraform/cloud-init.yaml
+```
+
+### Outputs
+
+`outputs.tf` exposes the public IP, SSH command, target FQDN, status check, and resource group:
+
+```hcl file=../terraform/outputs.tf
+```
+
+### Example Variables File
+
+Copy `terraform.tfvars.example` to `terraform.tfvars` and fill in your values. The `.gitignore` excludes `terraform.tfvars` to prevent committing credentials:
+
+```hcl file=../terraform/terraform.tfvars.example
 ```
 
 Replace `subscription_id` with your Azure subscription ID (from `az account show --query id -o tsv`) and `target_fqdn` with your F5 XC load balancer domain.
 
-### Cloud-Init Summary
-
-The VM is provisioned via cloud-init, which performs the following steps:
-
-1. **System update** -- `apt-get update && apt-get upgrade`
-2. **APT packages** -- Installs nikto, nmap, masscan, sqlmap, hydra, medusa, ncrack, tshark, hping3, tcpdump, netcat, ngrep, iperf3, mtr, sslscan, socat, dirb, whatweb, whois, dnsutils, and supporting libraries
-3. **Node.js 20.x** -- Via NodeSource APT repository for Puppeteer and Playwright
-4. **Python tooling** -- Installs `uv` for fast Python package management
-5. **GitHub Releases** -- Downloads latest binaries for nuclei, dalfox, ffuf, gobuster, feroxbuster, subfinder, httpx, amass via `ghlatest.sh` and `install-release.sh`
-6. **Python packages** -- Installs mitmproxy, sslyze, dnsrecon, fierce, theHarvester, playwright, scapy, impacket, arjun, pwntools, hashid via `uv` and `pip`
-7. **npm packages** -- Installs puppeteer and puppeteer-extra-plugin-stealth globally
-8. **Git clones** -- Clones testssl.sh, recon-ng, spiderfoot, SecLists to `/opt/`
-9. **Browser install** -- `playwright install chromium` for headless browser automation
-10. **Suite deployment** -- Copies traffic suites and runner.sh to `/opt/traffic-generator/`
-11. **Config file** -- Writes `config.env` with `TARGET_FQDN` and `TARGET_ORIGIN_IP`
-12. **Status file** -- Writes `/opt/traffic-generator/status.json` on completion
-13. **Full tier (optional)** -- Installs ZAP and Metasploit if `install_tier = "full"`
-
 ## Deploy
-
-Initialize Terraform and apply:
 
 ```bash
 terraform init
@@ -135,6 +89,22 @@ terraform apply
 ```
 
 Terraform outputs the public IP, SSH command, and target FQDN after successful deployment.
+
+## VM Sizing
+
+The F-series compute-optimized VMs are recommended for this CPU-bound traffic generation workload. The cloud-init kernel tuning and tool concurrency scale automatically with vCPU count.
+
+| VM SKU | vCPU | RAM | Network | Use Case | Est. Monthly |
+|---|---|---|---|---|---|
+| Standard_F4s_v2 | 4 | 8 GiB | 10 Gbps | Light lab/demo | ~$97 |
+| Standard_F8s_v2 | 8 | 16 GiB | 12.5 Gbps | Standard demos | ~$194 |
+| Standard_F16s_v2 | 16 | 32 GiB | 12.5 Gbps | Load testing (default) | ~$389 |
+| Standard_F32s_v2 | 32 | 64 GiB | 16 Gbps | Heavy benchmarking | ~$778 |
+| Standard_D16s_v3 | 16 | 64 GiB | 12.5 Gbps | RAM-heavy workloads | ~$439 |
+
+:::tip
+F16s_v2 was validated as the optimal price-performance option by A/B/C/D benchmark testing against CDN F16s_v2 and F32s_v2 targets. See [benchmarks/](https://github.com/f5xc-salesdemos/traffic-generator/tree/main/benchmarks) for full results.
+:::
 
 ## Post-Deploy Verification
 
@@ -147,7 +117,6 @@ SSH into the VM and wait for provisioning to finish:
 ```bash
 ssh azureuser@$(terraform output -raw public_ip)
 
-# Wait for cloud-init to complete (blocks until done)
 cloud-init status --wait
 ```
 
@@ -184,35 +153,13 @@ Run a verification loop to confirm each critical tool is available on PATH:
 ```bash
 for tool in nikto sqlmap nuclei dalfox ffuf gobuster feroxbuster nmap masscan \
   hydra medusa ncrack sslscan tshark hping3 mitmproxy sslyze subfinder httpx \
-  amass arjun mtr whatweb dirb socat netcat ngrep iperf3 whois dig; do
+  amass arjun mtr whatweb dirb socat netcat ngrep iperf3 whois dig wrk hey; do
   if command -v "$tool" > /dev/null 2>&1; then
     echo "OK: $tool"
   else
     echo "MISSING: $tool"
   fi
 done
-```
-
-Verify browser automation:
-
-```bash
-# Playwright
-playwright --version
-
-# Puppeteer (via Node.js)
-node -e "require('puppeteer')" && echo "OK: puppeteer"
-
-# Chromium
-chromium-browser --version 2>/dev/null || chromium --version 2>/dev/null
-```
-
-Verify git-cloned tools:
-
-```bash
-ls /opt/testssl.sh/testssl.sh && echo "OK: testssl.sh"
-ls /opt/recon-ng/recon-ng && echo "OK: recon-ng"
-ls /opt/spiderfoot/sf.py && echo "OK: spiderfoot"
-ls /opt/SecLists/README.md && echo "OK: SecLists"
 ```
 
 ### Verify Suite Runner
@@ -223,7 +170,6 @@ Confirm the runner and suites are installed:
 ls /opt/traffic-generator/suites/runner.sh
 ls /opt/traffic-generator/suites/*/
 
-# Dry-run a suite to verify structure
 /opt/traffic-generator/suites/runner.sh web-app-attacks --dry-run
 ```
 

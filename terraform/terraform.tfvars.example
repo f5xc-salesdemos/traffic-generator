@@ -1,0 +1,6 @@
+subscription_id    = "00000000-0000-0000-0000-000000000000"
+target_fqdn        = "demo.example.com"
+# target_origin_ip = "10.0.0.4"
+# tool_tier        = "full"
+# vm_size          = "Standard_F16s_v2"
+# disk_size_gb     = 128

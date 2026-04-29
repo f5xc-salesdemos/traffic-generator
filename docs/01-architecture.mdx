@@ -1,6 +1,6 @@
 ---
 title: Architecture
-description: "Ubuntu 24.04 Azure VM with 50+ pre-installed security tools organized into 7 traffic suites, targeting F5 XC HTTP load balancers protecting origin-server applications for WAF, Bot Defense, API Security, and CSD validation"
+description: "Ubuntu 24.04 Azure VM with 50+ pre-installed security tools organized into 17 traffic suites, targeting F5 XC HTTP load balancers protecting origin-server applications for WAF, Bot Defense, API Security, and CSD validation"
 sidebar:
   order: 1
 ---
@@ -21,7 +21,7 @@ The Traffic Generator sends requests to the F5 XC load balancer's public FQDN. T
 
 ```mermaid
 graph LR
-    TG[Traffic Generator VM<br/>Ubuntu 24.04<br/>Standard_D4s_v3] -->|Attack Traffic<br/>HTTPS| XCHLB[F5 XC HTTP LB<br/>WAF / Bot Defense<br/>API Security / CSD]
+    TG[Traffic Generator VM<br/>Ubuntu 24.04<br/>Standard_F16s_v2] -->|Attack Traffic<br/>HTTPS| XCHLB[F5 XC HTTP LB<br/>WAF / Bot Defense<br/>API Security / CSD]
     XCHLB -->|Filtered Traffic<br/>HTTP| ORIGIN[Origin Server VM<br/>nginx + Docker Apps]
     TG -->|Direct Baseline<br/>HTTP optional| ORIGIN
     RUNNER[runner.sh] --> SUITES[7 Traffic Suites]
@@ -32,7 +32,7 @@ The Traffic Generator VM runs on Azure with:
 
 - **Ubuntu 24.04 LTS** as the base image
 - **50+ security tools** installed via cloud-init during provisioning
-- **7 organized traffic suites** with numbered scripts executed in order
+- **17 organized traffic suites** with numbered scripts executed in order
 - **runner.sh** orchestrator for suite execution with results logging
 - **config.env** for target configuration (FQDN, origin IP)
 
@@ -55,7 +55,7 @@ The Traffic Generator supports two installation tiers controlled by the `install
 
 ### Standard Tier (default)
 
-Installs all tools listed in the tool catalog except ZAP and Metasploit. Provisioning completes in 15-20 minutes. This tier covers all 7 traffic suites and is sufficient for most demo scenarios.
+Installs all tools listed in the tool catalog except ZAP and Metasploit. Provisioning completes in 15-20 minutes. This tier covers all 17 traffic suites and is sufficient for most demo scenarios.
 
 ### Full Tier
 
@@ -65,11 +65,11 @@ Adds OWASP ZAP and Metasploit Framework on top of the standard tier. Provisionin
 
 | Resource | SKU | Estimated Monthly Cost |
 |---|---|---|
-| Ubuntu 24.04 VM | Standard_D4s_v3 (4 vCPU, 16 GiB) | ~$130 USD |
+| Ubuntu 24.04 VM | Standard_F16s_v2 (16 vCPU, 32 GiB) | ~$375 USD |
 | Public IP | Standard, Static | ~$4 USD |
 | OS Disk | 64 GiB Premium SSD | ~$10 USD |
 | VNet + NSG | -- | No additional cost |
-| **Total** | | **~$140 USD/month** |
+| **Total** | | **~$389 USD/month** |
 
 :::tip
 Use `terraform destroy` when the lab is not in use to avoid ongoing charges. See [Teardown](../08-teardown/) for the procedure.
