@@ -28,7 +28,7 @@ resource "azurerm_linux_virtual_machine" "traffic_gen" {
   }
 
   custom_data = base64encode(templatefile("${path.module}/cloud-init.yaml", {
-    target_fqdn     = var.target_fqdn
+    target_fqdn      = var.target_fqdn
     target_origin_ip = var.target_origin_ip
     tool_tier        = var.tool_tier
   }))
