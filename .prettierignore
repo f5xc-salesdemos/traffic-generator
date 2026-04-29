@@ -1,0 +1,13 @@
+# Auto-generated files -- do not reformat
+**/src/gen/
+**/src/v2/gen/
+**/src/generated/
+**/*.gen.ts
+**/*.gen.js
+**/*.gen.d.ts
+
+# Build and release output
+dist/
+build/
+release/
+vendor/

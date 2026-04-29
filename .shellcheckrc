@@ -1,0 +1,4 @@
+# Disable SC2016: Expressions don't expand in single quotes.
+# All single-quoted $var references in this repo are intentional jq variables,
+# not missed shell expansions.
+disable=SC2016

@@ -1,0 +1,22 @@
+---
+name: Super-Linter
+
+on:
+  pull_request:
+    branches: [main]
+    types: [opened, synchronize, reopened]
+
+permissions:
+  contents: read
+  packages: read
+  statuses: write
+  pull-requests: write
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  lint:
+    uses: f5xc-salesdemos/docs-control/.github/workflows/super-linter.yml@main
+    secrets: inherit

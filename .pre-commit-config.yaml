@@ -1,0 +1,206 @@
+---
+# =============================================================================
+# GOVERNANCE CHECKS (fail-fast)
+#
+# These run FIRST. Direct commits to main are forbidden — all changes must
+# go through a pull request linked to a GitHub issue. If this hook fails:
+#
+#   1. Create a GitHub issue describing the change
+#   2. Create a feature branch:  git checkout -b feat/<issue>-description
+#   3. Commit to the feature branch, then open a PR with "Closes #<issue>"
+#
+# See CONTRIBUTING.md for the full workflow.
+# =============================================================================
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v6.0.0
+    hooks:
+      - id: no-commit-to-branch
+        name: "GOVERNANCE: never commit directly to main"
+        args: ["--branch", "main"]
+
+  # ===========================================================================
+  # Repository-specific hooks (escape hatch)
+  #
+  # Runs scripts/pre-commit-local.sh if present and executable. Repos use
+  # this for language-specific checks (ruff, eslint, tsc, etc.) that do not
+  # belong in the universal config.
+  # ===========================================================================
+  - repo: local
+    hooks:
+      - id: local-hooks
+        name: Repository-specific hooks
+        entry: >-
+          bash -c
+          'if [ -x scripts/pre-commit-local.sh ];
+          then scripts/pre-commit-local.sh; fi'
+        language: system
+        always_run: true
+        pass_filenames: false
+
+  # ===========================================================================
+  # File size guard
+  # ===========================================================================
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v6.0.0
+    hooks:
+      - id: check-added-large-files
+        args: ["--maxkb=1024"]
+
+  # ===========================================================================
+  # YAML lint — config: .yamllint.yaml
+  # Replaces: VALIDATE_YAML_PRETTIER=false + yamllint in super-linter
+  # ===========================================================================
+  - repo: local
+    hooks:
+      - id: yamllint
+        name: YAML lint
+        entry: yamllint
+        args: ["-c", ".yamllint.yaml"]
+        language: system
+        types: [yaml]
+
+  # ===========================================================================
+  # Markdown lint — config: .markdownlint.json
+  # Replaces: VALIDATE_MARKDOWN_PRETTIER=false + markdownlint in super-linter
+  # ===========================================================================
+  - repo: local
+    hooks:
+      - id: markdownlint
+        name: Markdown lint
+        entry: markdownlint-cli2
+        language: system
+        types: [markdown]
+
+  # ===========================================================================
+  # Shell script analysis — config: .shellcheckrc (SC2016 disabled there)
+  # Replaces: shellcheck in super-linter
+  # (was passing SHELLCHECK_OPTS="-e SC2016")
+  # ===========================================================================
+  - repo: local
+    hooks:
+      - id: shellcheck
+        name: Shell script lint
+        entry: shellcheck
+        language: system
+        types: [shell]
+
+  # ===========================================================================
+  # GitHub Actions workflow lint
+  # Replaces: actionlint in super-linter
+  # ===========================================================================
+  - repo: local
+    hooks:
+      - id: actionlint
+        name: GitHub Actions lint
+        entry: actionlint
+        language: system
+        files: ^\.github/workflows/.*\.ya?ml$
+        pass_filenames: false
+
+  # ===========================================================================
+  # Dockerfile lint
+  # Replaces: hadolint in super-linter
+  # ===========================================================================
+  - repo: local
+    hooks:
+      - id: hadolint
+        name: Dockerfile lint
+        entry: hadolint
+        language: system
+        types: [dockerfile]
+
+  # ===========================================================================
+  # JS / TS / JSON lint — config: biome.json
+  # Replaces: VALIDATE_JAVASCRIPT_ES=false, VALIDATE_TYPESCRIPT_ES=false,
+  #           VALIDATE_JSON_PRETTIER=false in super-linter; uses biome instead
+  # ===========================================================================
+  - repo: local
+    hooks:
+      - id: biome-check
+        name: Biome lint (JS/TS/JSON)
+        entry: biome check --no-errors-on-unmatched
+        language: system
+        types_or: [javascript, jsx, ts, tsx, json]
+
+  # ===========================================================================
+  # Spell check — config: .codespellrc
+  # Replaces: codespell in super-linter
+  # ===========================================================================
+  - repo: local
+    hooks:
+      - id: codespell
+        name: Spelling check
+        entry: codespell
+        language: system
+        types: [text]
+
+  # ===========================================================================
+  # EditorConfig conformance — config: .editorconfig-checker.json
+  # Replaces: editorconfig-checker in super-linter
+  # ===========================================================================
+  - repo: local
+    hooks:
+      - id: editorconfig-checker
+        name: EditorConfig check
+        entry: editorconfig-checker
+        language: system
+
+  # ===========================================================================
+  # GitHub Actions security scan — config: zizmor.yaml
+  # Replaces: zizmor in super-linter
+  # ===========================================================================
+  - repo: local
+    hooks:
+      - id: zizmor
+        name: GitHub Actions security
+        entry: zizmor --config zizmor.yaml .github/workflows/
+        language: system
+        files: ^\.github/workflows/.*\.ya?ml$
+        pass_filenames: false
+
+  # ===========================================================================
+  # Infrastructure / IaC security scan — config: .checkov.yaml
+  # Replaces: checkov in super-linter
+  # ===========================================================================
+  - repo: local
+    hooks:
+      - id: checkov
+        name: Infrastructure security scan
+        entry: checkov --config-file .checkov.yaml -d .
+        language: system
+        pass_filenames: false
+        files: ^(\.github/|Dockerfile|.*\.tf|.*\.yaml|.*\.yml)
+
+  # ===========================================================================
+  # Secrets detection
+  # Replaces: gitleaks in super-linter
+  # ===========================================================================
+  - repo: local
+    hooks:
+      - id: gitleaks
+        name: Secrets detection
+        entry: gitleaks protect --staged --redact
+        language: system
+        pass_filenames: false
+
+ci:
+  autofix_prs: true
+  autoupdate_schedule: weekly
+  # All language: system hooks require tools installed
+  # in the runner — skip them in pre-commit.ci (cloud)
+  # since the environment lacks these binaries.
+  # They run locally and in GitHub Actions CI where tools are pre-installed.
+  skip:
+    - local-hooks
+    - yamllint
+    - markdownlint
+    - shellcheck
+    - actionlint
+    - hadolint
+    - biome-check
+    - codespell
+    - editorconfig-checker
+    - zizmor
+    - checkov
+    - gitleaks

@@ -1,0 +1,34 @@
+---
+# ── Path exclusions ──────────────────────────────────────────────────────────
+# Directories that never contain IaC. Avoids parsing large generated/vendored
+# files that cause memory exhaustion (e.g. 88 MB of OpenAPI spec JSON).
+skip-path:
+  - dist
+  - build
+  - release
+  - vendor
+  - node_modules
+  - docs/specifications
+  - specs/discovered
+  - specs/raw
+  - specs/original
+  # Install-verification dockerfiles are test harnesses, not production
+  # images — CKV_DOCKER_2 (HEALTHCHECK) and CKV_DOCKER_3 (non-root user)
+  # are not meaningful for ephemeral CI validation containers.
+  - scripts/install-tests
+
+# ── Framework restriction ────────────────────────────────────────────────────
+# Only run frameworks relevant to this org's repos. Eliminates ~35 frameworks
+# that parse every file looking for CloudFormation/ARM/Kubernetes/etc. patterns
+# in repos that contain none of those.
+framework:
+  - github_actions
+  - github_configuration
+  - secrets
+  - terraform
+
+# ── Check exclusions ─────────────────────────────────────────────────────────
+skip-check:
+  - CKV_GHA_7    # GitHub Actions — allow pinning to branch refs
+  - CKV2_GHA_1   # GitHub Actions — immutable actions (covered by Dependabot)
+  - "CKV_SECRET_4:.*specifications/api/.*\\.json$"

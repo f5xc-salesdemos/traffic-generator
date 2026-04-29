@@ -1,0 +1,7 @@
+{
+  "Disable": {
+    "IndentSize": true,
+    "Indentation": true
+  },
+  "Exclude": ["[.]md$", "[.]mdx$"]
+}

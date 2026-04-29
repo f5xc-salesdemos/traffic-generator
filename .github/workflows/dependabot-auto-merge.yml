@@ -1,0 +1,14 @@
+---
+name: Dependabot Auto-Merge
+
+on: pull_request_target
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  call:
+    if: github.actor == 'dependabot[bot]'
+    uses: f5xc-salesdemos/docs-control/.github/workflows/dependabot-auto-merge.yml@main
+    secrets: inherit

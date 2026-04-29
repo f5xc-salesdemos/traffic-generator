@@ -1,0 +1,39 @@
+---
+name: Enforce Repository Settings
+
+on:
+  schedule:
+    - cron: '0 */6 * * *'
+  push:
+    branches: [main]
+    paths:
+      - '.github/config/**'
+  workflow_dispatch:
+    inputs:
+      source_sha:
+        description: 'Commit SHA of the docs-control push that triggered this run. Forwarded to sync-managed-files for Pages staleness check.'
+        required: false
+        type: string
+        default: ''
+
+permissions:
+  contents: read
+
+concurrency:
+  group: enforce-repo-settings
+  cancel-in-progress: true
+
+jobs:
+  enforce-settings:
+    uses: f5xc-salesdemos/docs-control/.github/workflows/enforce-repo-settings.yml@main
+    with:
+      source_sha: ${{ inputs.source_sha || '' }}
+    secrets:
+      repo-settings-token: ${{ secrets.REPO_SETTINGS_TOKEN }}
+
+  sync-files:
+    uses: f5xc-salesdemos/docs-control/.github/workflows/sync-managed-files.yml@main
+    with:
+      source_sha: ${{ inputs.source_sha || '' }}
+    secrets:
+      repo-sync-token: ${{ secrets.REPO_SYNC_TOKEN }}

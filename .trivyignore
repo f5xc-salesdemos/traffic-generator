@@ -1,0 +1,15 @@
+# Governance-managed Trivy ignore list
+# Review quarterly — remove entries when upstream fixes are released
+#
+# Format: one CVE/ID per line
+# Lines starting with # are comments
+
+# CVE-2026-4539 — Low severity (CVSS 3.3) ReDoS in pygments AdlLexer
+# Transitive dependency: rich -> pygments
+# Affected: pygments <= 2.19.2 — no fix released to PyPI
+# Fix merged upstream: pygments/pygments#3064 (2026-03-25)
+# Pygments maintainers dispute this as a security issue per their security policy
+# Impact: Zero — AdlLexer handles openEHR archetype definitions, unused in this context
+# Expiry: 2026-05-31 — re-evaluate after pygments releases fix
+# Ref: https://nvd.nist.gov/vuln/detail/CVE-2026-4539
+CVE-2026-4539
