@@ -5,8 +5,8 @@
 // Estimated duration: 1-2 minutes
 
 const { chromium } = require('playwright');
-const path = require('path');
-const fs = require('fs');
+const path = require('node:path');
+const fs = require('node:fs');
 const PROFILE_DIR = `/tmp/pw-profile-${path.basename(__filename, '.js')}-${process.pid}`;
 process.on('exit', () => {
   try {

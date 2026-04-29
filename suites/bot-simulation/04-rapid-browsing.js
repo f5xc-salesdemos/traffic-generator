@@ -5,10 +5,14 @@
 // Estimated duration: 1-2 minutes
 
 const { chromium } = require('playwright');
-const path = require('path');
-const fs = require('fs');
+const path = require('node:path');
+const fs = require('node:fs');
 const PROFILE_DIR = `/tmp/pw-profile-${path.basename(__filename, '.js')}-${process.pid}`;
-process.on('exit', () => { try { fs.rmSync(PROFILE_DIR, { recursive: true, force: true }); } catch {} });
+process.on('exit', () => {
+  try {
+    fs.rmSync(PROFILE_DIR, { recursive: true, force: true });
+  } catch {}
+});
 
 const TARGET_FQDN = process.argv[2];
 if (!TARGET_FQDN) {
@@ -86,7 +90,7 @@ const USER_AGENTS = [
     });
     const page = await context.newPage();
 
-    const uaShort = ua.length > 40 ? ua.substring(0, 40) + '...' : ua;
+    const uaShort = ua.length > 40 ? `${ua.substring(0, 40)}...` : ua;
     console.log(`[+] UA: ${uaShort}`);
 
     for (const path of PAGES) {
@@ -115,7 +119,7 @@ const USER_AGENTS = [
   fs.rmSync(PROFILE_DIR, { recursive: true, force: true });
 
   const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
-  const rate = (visited / elapsed * 1).toFixed(1);
+  const rate = ((visited / elapsed) * 1).toFixed(1);
 
   console.log('[*] Rapid browsing simulation complete');
   console.log(`    Pages visited: ${visited} | Errors: ${errors}`);

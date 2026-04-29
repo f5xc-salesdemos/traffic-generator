@@ -3,10 +3,14 @@
 // Enables the cryptominer toggle, waits for mining beacon, verifies exfiltration.
 
 const { chromium } = require('playwright');
-const path = require('path');
-const fs = require('fs');
+const path = require('node:path');
+const fs = require('node:fs');
 const PROFILE_DIR = `/tmp/pw-profile-${path.basename(__filename, '.js')}-${process.pid}`;
-process.on('exit', () => { try { fs.rmSync(PROFILE_DIR, { recursive: true, force: true }); } catch {} });
+process.on('exit', () => {
+  try {
+    fs.rmSync(PROFILE_DIR, { recursive: true, force: true });
+  } catch {}
+});
 
 const TARGET_FQDN = process.argv[2];
 if (!TARGET_FQDN) {
@@ -30,7 +34,7 @@ const BASE_URL = `${process.env.TARGET_PROTOCOL || 'http'}://${TARGET_FQDN}`;
     await page.route('**/exfil**', (route) => {
       const url = new URL(route.request().url());
       if (!url.pathname.startsWith('/csd-demo/')) {
-        url.pathname = '/csd-demo' + url.pathname;
+        url.pathname = `/csd-demo${url.pathname}`;
         route.continue({ url: url.toString() });
       } else {
         route.continue();
@@ -43,8 +47,8 @@ const BASE_URL = `${process.env.TARGET_PROTOCOL || 'http'}://${TARGET_FQDN}`;
     // Capture CPU baseline before enabling miner
     const cpuBefore = await page.evaluate(() => {
       const start = performance.now();
-      let sum = 0;
-      for (let i = 0; i < 1000000; i++) sum += Math.sqrt(i);
+      let _sum = 0;
+      for (let i = 0; i < 1000000; i++) _sum += Math.sqrt(i);
       return performance.now() - start;
     });
 
@@ -57,15 +61,15 @@ const BASE_URL = `${process.env.TARGET_PROTOCOL || 'http'}://${TARGET_FQDN}`;
     // Measure CPU after miner is running
     const cpuAfter = await page.evaluate(() => {
       const start = performance.now();
-      let sum = 0;
-      for (let i = 0; i < 1000000; i++) sum += Math.sqrt(i);
+      let _sum = 0;
+      for (let i = 0; i < 1000000; i++) _sum += Math.sqrt(i);
       return performance.now() - start;
     });
 
     // 5. Fetch exfil log, filter for type=cryptominer
     const res = await fetch(`${BASE_URL}/csd-demo/exfil/log`);
     const log = await res.json();
-    const minerEntries = log.filter(e => e.attack_type === 'cryptominer');
+    const minerEntries = log.filter((e) => e.attack_type === 'cryptominer');
 
     // 6. Verify mining beacon was sent
     if (minerEntries.length === 0) {
@@ -77,7 +81,7 @@ const BASE_URL = `${process.env.TARGET_PROTOCOL || 'http'}://${TARGET_FQDN}`;
     console.log('Mining beacon data:', JSON.stringify(minerEntries[0].data || minerEntries[0], null, 2));
 
     // 7. CPU impact measurement
-    const cpuImpact = ((cpuAfter - cpuBefore) / cpuBefore * 100).toFixed(1);
+    const cpuImpact = (((cpuAfter - cpuBefore) / cpuBefore) * 100).toFixed(1);
     console.log(`CPU impact measurement:`);
     console.log(`  - Baseline: ${cpuBefore.toFixed(2)}ms`);
     console.log(`  - With miner: ${cpuAfter.toFixed(2)}ms`);
