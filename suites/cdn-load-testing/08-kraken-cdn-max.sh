@@ -187,10 +187,10 @@ while true; do
   for ep in "/juice-shop/" "/httpbin/get" "/whoami/" "/health" "/dvwa/login.php"; do
     S=$(check_cache_status "${BASE}${ep}")
     case "$S" in
-      HIT) HIT=$((HIT + 1)) ;;
-      MISS) MISS=$((MISS + 1)) ;;
-      STALE | UPDATING | EXPIRED) STALE=$((STALE + 1)) ;;
-      *) OTHER=$((OTHER + 1)) ;;
+    HIT) HIT=$((HIT + 1)) ;;
+    MISS) MISS=$((MISS + 1)) ;;
+    STALE | UPDATING | EXPIRED) STALE=$((STALE + 1)) ;;
+    *) OTHER=$((OTHER + 1)) ;;
     esac
   done
 

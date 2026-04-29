@@ -93,10 +93,10 @@ while true; do
     for s in $(seq 1 "$SAMPLES_PER_CHECK"); do
       STATUS=$(check_cache_status "${BASE}${ep}")
       case "$STATUS" in
-        HIT) HIT=$((HIT + 1)) ;;
-        MISS) MISS=$((MISS + 1)) ;;
-        STALE | UPDATING | EXPIRED) STALE=$((STALE + 1)) ;;
-        *) OTHER=$((OTHER + 1)) ;;
+      HIT) HIT=$((HIT + 1)) ;;
+      MISS) MISS=$((MISS + 1)) ;;
+      STALE | UPDATING | EXPIRED) STALE=$((STALE + 1)) ;;
+      *) OTHER=$((OTHER + 1)) ;;
       esac
     done
     TOTAL_HIT=$((TOTAL_HIT + HIT))

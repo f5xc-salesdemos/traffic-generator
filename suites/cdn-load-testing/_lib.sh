@@ -165,13 +165,13 @@ rand_csd_demo_path() {
 rand_any_path() {
   local app=$((RANDOM % 7))
   case $app in
-    0) rand_juice_shop_path ;;
-    1) rand_dvwa_path ;;
-    2) rand_vampi_path ;;
-    3) rand_httpbin_path ;;
-    4) rand_csd_demo_path ;;
-    5) echo "/whoami/" ;;
-    6) echo "/health" ;;
+  0) rand_juice_shop_path ;;
+  1) rand_dvwa_path ;;
+  2) rand_vampi_path ;;
+  3) rand_httpbin_path ;;
+  4) rand_csd_demo_path ;;
+  5) echo "/whoami/" ;;
+  6) echo "/health" ;;
   esac
 }
 
