@@ -20,31 +20,226 @@ cp terraform.tfvars.example terraform.tfvars
 
 `main.tf` configures the Azure provider:
 
-```hcl file=./_data/main.tf
+```hcl
+terraform {
+  required_version = ">= 1.5.0"
+
+  required_providers {
+    azurerm = {
+      source  = "hashicorp/azurerm"
+      version = "~> 4.0"
+    }
+  }
+}
+
+provider "azurerm" {
+  features {}
+  subscription_id = var.subscription_id
+}
 ```
 
 `variables.tf` defines all configurable parameters. The `vm_size` default is `Standard_F16s_v2` (16 vCPU compute-optimized) — see [VM Sizing](#vm-sizing) for scaling guidance:
 
-```hcl file=./_data/variables.tf
+```hcl
+variable "subscription_id" {
+  description = "Azure subscription ID"
+  type        = string
+}
+
+variable "resource_group_name" {
+  description = "Name for the Azure resource group"
+  type        = string
+  default     = "rg-traffic-generator"
+}
+
+variable "location" {
+  description = "Azure region for all resources"
+  type        = string
+  default     = "eastus2"
+}
+
+variable "vm_size" {
+  description = "Azure VM size (F16s_v2: 16 vCPU compute-optimized — best throughput per dollar, validated by A/B/C/D benchmark)"
+  type        = string
+  default     = "Standard_F16s_v2"
+}
+
+variable "admin_username" {
+  description = "SSH admin username for the VM"
+  type        = string
+  default     = "azureuser"
+}
+
+variable "ssh_public_key_path" {
+  description = "Path to the SSH public key file"
+  type        = string
+  default     = "~/.ssh/id_ed25519.pub"
+}
+
+variable "environment_tag" {
+  description = "Environment tag applied to all resources"
+  type        = string
+  default     = "lab"
+}
+
+variable "target_fqdn" {
+  description = "FQDN of the F5 XC load balancer to attack"
+  type        = string
+}
+
+variable "target_origin_ip" {
+  description = "Direct origin IP for bypass testing"
+  type        = string
+  default     = ""
+}
+
+variable "disk_size_gb" {
+  description = "OS disk size in GB (larger disk for security tools)"
+  type        = number
+  default     = 64
+}
+
+variable "tool_tier" {
+  description = "Tool installation tier: standard (default) or full (includes ZAP, Metasploit)"
+  type        = string
+  default     = "standard"
+
+  validation {
+    condition     = contains(["standard", "full"], var.tool_tier)
+    error_message = "tool_tier must be \"standard\" or \"full\"."
+  }
+}
 ```
 
 ### Network Infrastructure
 
 `network.tf` creates the VNet, subnet, public IP, NSG (port 22 SSH), and NIC:
 
-```hcl file=./_data/network.tf
+```hcl
+resource "azurerm_resource_group" "traffic_gen" {
+  name     = var.resource_group_name
+  location = var.location
+
+  tags = {
+    environment = var.environment_tag
+    component   = "traffic-generator"
+  }
+}
+
+resource "azurerm_virtual_network" "traffic_gen" {
+  name                = "vnet-traffic-generator"
+  address_space       = ["10.201.0.0/16"]
+  location            = azurerm_resource_group.traffic_gen.location
+  resource_group_name = azurerm_resource_group.traffic_gen.name
+
+  tags = azurerm_resource_group.traffic_gen.tags
+}
+
+resource "azurerm_subnet" "traffic_gen" {
+  name                 = "snet-traffic-generator"
+  resource_group_name  = azurerm_resource_group.traffic_gen.name
+  virtual_network_name = azurerm_virtual_network.traffic_gen.name
+  address_prefixes     = ["10.201.1.0/24"]
+}
+
+resource "azurerm_public_ip" "traffic_gen" {
+  name                = "pip-traffic-generator"
+  location            = azurerm_resource_group.traffic_gen.location
+  resource_group_name = azurerm_resource_group.traffic_gen.name
+  allocation_method   = "Static"
+  sku                 = "Standard"
+
+  tags = azurerm_resource_group.traffic_gen.tags
+}
+
+resource "azurerm_network_security_group" "traffic_gen" {
+  name                = "nsg-traffic-generator"
+  location            = azurerm_resource_group.traffic_gen.location
+  resource_group_name = azurerm_resource_group.traffic_gen.name
+
+  security_rule {
+    name                       = "AllowSSH"
+    priority                   = 100
+    direction                  = "Inbound"
+    access                     = "Allow"
+    protocol                   = "Tcp"
+    source_port_range          = "*"
+    destination_port_range     = "22"
+    source_address_prefix      = "*"
+    destination_address_prefix = "*"
+  }
+
+  tags = azurerm_resource_group.traffic_gen.tags
+}
+
+resource "azurerm_network_interface" "traffic_gen" {
+  name                = "nic-traffic-generator"
+  location            = azurerm_resource_group.traffic_gen.location
+  resource_group_name = azurerm_resource_group.traffic_gen.name
+
+  ip_configuration {
+    name                          = "internal"
+    subnet_id                     = azurerm_subnet.traffic_gen.id
+    private_ip_address_allocation = "Dynamic"
+    public_ip_address_id          = azurerm_public_ip.traffic_gen.id
+  }
+
+  tags = azurerm_resource_group.traffic_gen.tags
+}
+
+resource "azurerm_network_interface_security_group_association" "traffic_gen" {
+  network_interface_id      = azurerm_network_interface.traffic_gen.id
+  network_security_group_id = azurerm_network_security_group.traffic_gen.id
+}
 ```
 
 ### Virtual Machine with Cloud-Init
 
 `vm.tf` creates the Ubuntu 24.04 VM and passes the cloud-init template with target and tooling variables:
 
-```hcl file=./_data/vm.tf
+```hcl
+resource "azurerm_linux_virtual_machine" "traffic_gen" {
+  name                = "vm-traffic-generator"
+  resource_group_name = azurerm_resource_group.traffic_gen.name
+  location            = azurerm_resource_group.traffic_gen.location
+  size                = var.vm_size
+
+  admin_username                  = var.admin_username
+  disable_password_authentication = true
+
+  admin_ssh_key {
+    username   = var.admin_username
+    public_key = file(var.ssh_public_key_path)
+  }
+
+  network_interface_ids = [azurerm_network_interface.traffic_gen.id]
+
+  os_disk {
+    caching              = "ReadWrite"
+    storage_account_type = "Premium_LRS"
+    disk_size_gb         = var.disk_size_gb
+  }
+
+  source_image_reference {
+    publisher = "Canonical"
+    offer     = "ubuntu-24_04-lts"
+    sku       = "server"
+    version   = "latest"
+  }
+
+  custom_data = base64encode(templatefile("${path.module}/cloud-init.yaml", {
+    target_fqdn      = var.target_fqdn
+    target_origin_ip = var.target_origin_ip
+    tool_tier        = var.tool_tier
+  }))
+
+  tags = azurerm_resource_group.traffic_gen.tags
+}
 ```
 
 ### Cloud-Init Provisioning
 
-`cloud-init.yaml` is the production-validated configuration verified under 48+ hours of continuous load testing including 4 rounds of origin torture testing. It provisions:
+[`cloud-init.yaml`](https://github.com/f5xc-salesdemos/traffic-generator/blob/main/terraform/cloud-init.yaml) (348 lines) is the production-validated configuration verified under 48+ hours of continuous load testing including 4 rounds of origin torture testing. It provisions:
 
 - **Kernel tuning** — `somaxconn=131072`, `tcp_max_tw_buckets=4000000`, `tcp_fin_timeout=5`, 64 MiB socket buffers, `file-max=4194304`
 - **NIC optimization** — RPS/RFS across all cores, maximized ring buffers via ethtool, THP=always
@@ -59,21 +254,48 @@ cp terraform.tfvars.example terraform.tfvars
 
 The cloud-init uses Terraform template variables: `${target_fqdn}`, `${target_origin_ip}`, and `${tool_tier}`. Shell variables like `$NPROC` are escaped as `$$NPROC` in the Terraform templatefile.
 
-```yaml file=./_data/cloud-init.yaml
-```
-
 ### Outputs
 
 `outputs.tf` exposes the public IP, SSH command, target FQDN, status check, and resource group:
 
-```hcl file=./_data/outputs.tf
+```hcl
+output "public_ip" {
+  description = "Public IP address of the traffic generator VM"
+  value       = azurerm_public_ip.traffic_gen.ip_address
+}
+
+output "ssh_command" {
+  description = "SSH command to connect to the traffic generator"
+  value       = "ssh ${var.admin_username}@${azurerm_public_ip.traffic_gen.ip_address}"
+}
+
+output "target_fqdn" {
+  description = "Target FQDN the traffic generator is configured to attack"
+  value       = var.target_fqdn
+}
+
+output "status_check" {
+  description = "SSH command to check provisioning status"
+  value       = "ssh ${var.admin_username}@${azurerm_public_ip.traffic_gen.ip_address} cat /opt/traffic-generator/status.json"
+}
+
+output "resource_group" {
+  description = "Resource group containing all traffic generator resources"
+  value       = azurerm_resource_group.traffic_gen.name
+}
 ```
 
 ### Example Variables File
 
 Copy `terraform.tfvars.example` to `terraform.tfvars` and fill in your values. The `.gitignore` excludes `terraform.tfvars` to prevent committing credentials:
 
-```hcl file=./_data/terraform.tfvars.example
+```hcl
+subscription_id    = "00000000-0000-0000-0000-000000000000"
+target_fqdn        = "demo.example.com"
+# target_origin_ip = "10.0.0.4"
+# tool_tier        = "full"
+# vm_size          = "Standard_F16s_v2"
+# disk_size_gb     = 128
 ```
 
 Replace `subscription_id` with your Azure subscription ID (from `az account show --query id -o tsv`) and `target_fqdn` with your F5 XC load balancer domain.
