@@ -13,3 +13,7 @@ provider "azurerm" {
   features {}
   subscription_id = var.subscription_id
 }
+
+locals {
+  resource_group_name = var.resource_group_name != "" ? var.resource_group_name : "rg-traffic-generator-${var.deployer}"
+}

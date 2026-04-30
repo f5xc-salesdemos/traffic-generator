@@ -1,5 +1,7 @@
 subscription_id    = "00000000-0000-0000-0000-000000000000"
 target_fqdn        = "demo.example.com"
+deployer           = "robin"           # your initials or first name → rg-traffic-generator-robin
+# resource_group_name = ""            # leave blank to auto-generate from deployer
 # target_origin_ip = "10.0.0.4"
 # tool_tier        = "full"
 # vm_size          = "Standard_F16s_v2"

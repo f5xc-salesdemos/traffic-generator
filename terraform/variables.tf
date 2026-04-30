@@ -3,10 +3,20 @@ variable "subscription_id" {
   type        = string
 }
 
-variable "resource_group_name" {
-  description = "Name for the Azure resource group"
+variable "deployer" {
+  description = "Short identifier for the person deploying (e.g. initials or first name). Appended to the resource group name to avoid collisions in shared subscriptions."
   type        = string
-  default     = "rg-traffic-generator"
+
+  validation {
+    condition     = can(regex("^[a-z0-9]{2,12}$", var.deployer))
+    error_message = "deployer must be 2-12 lowercase alphanumeric characters."
+  }
+}
+
+variable "resource_group_name" {
+  description = "Name for the Azure resource group (auto-generated from deployer if not set)"
+  type        = string
+  default     = ""
 }
 
 variable "location" {
