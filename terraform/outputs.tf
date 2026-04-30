@@ -20,5 +20,5 @@ output "status_check" {
 
 output "resource_group" {
   description = "Resource group containing all traffic generator resources"
-  value       = azurerm_resource_group.traffic_gen.name
+  value       = local.resource_group_name
 }

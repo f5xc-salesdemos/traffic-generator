@@ -1,5 +1,5 @@
 resource "azurerm_resource_group" "traffic_gen" {
-  name     = var.resource_group_name
+  name     = local.resource_group_name
   location = var.location
 
   tags = {
