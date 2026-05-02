@@ -1,20 +1,14 @@
+# ---------------------------------------------------------
+# General
+# ---------------------------------------------------------
+
 variable "subscription_id" {
   description = "Azure subscription ID"
   type        = string
 }
 
 variable "deployer" {
-  description = "Short identifier for the person deploying (e.g. initials or first name). Appended to the resource group name to avoid collisions in shared subscriptions."
-  type        = string
-
-  validation {
-    condition     = can(regex("^[a-z0-9]{2,12}$", var.deployer))
-    error_message = "deployer must be 2-12 lowercase alphanumeric characters."
-  }
-}
-
-variable "resource_group_name" {
-  description = "Name for the Azure resource group (auto-generated from deployer if not set)"
+  description = "Override for deployer identifier (auto-resolved from Azure AD if empty). Required for service principal or managed identity authentication."
   type        = string
   default     = ""
 }
@@ -25,8 +19,24 @@ variable "location" {
   default     = "eastus2"
 }
 
+variable "environment" {
+  description = "Environment label used in resource group naming and tags"
+  type        = string
+  default     = "lab"
+}
+
+variable "tags" {
+  description = "Additional tags merged with standard tags (component, environment, deployer, managed_by)"
+  type        = map(string)
+  default     = {}
+}
+
+# ---------------------------------------------------------
+# Compute
+# ---------------------------------------------------------
+
 variable "vm_size" {
-  description = "Azure VM size (F16s_v2: 16 vCPU compute-optimized — best throughput per dollar, validated by A/B/C/D benchmark)"
+  description = "Azure VM size (F16s_v2: 16 vCPU compute-optimized, validated by benchmark)"
   type        = string
   default     = "Standard_F16s_v2"
 }
@@ -43,14 +53,18 @@ variable "ssh_public_key_path" {
   default     = "~/.ssh/id_ed25519.pub"
 }
 
-variable "environment_tag" {
-  description = "Environment tag applied to all resources"
-  type        = string
-  default     = "lab"
+variable "disk_size_gb" {
+  description = "OS disk size in GB"
+  type        = number
+  default     = 64
 }
 
+# ---------------------------------------------------------
+# Component-Specific
+# ---------------------------------------------------------
+
 variable "target_fqdn" {
-  description = "FQDN of the F5 XC load balancer to attack"
+  description = "FQDN of the F5 XC load balancer to target"
   type        = string
 }
 
@@ -58,12 +72,6 @@ variable "target_origin_ip" {
   description = "Direct origin IP for bypass testing"
   type        = string
   default     = ""
-}
-
-variable "disk_size_gb" {
-  description = "OS disk size in GB (larger disk for security tools)"
-  type        = number
-  default     = 64
 }
 
 variable "tool_tier" {
