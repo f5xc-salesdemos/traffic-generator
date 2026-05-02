@@ -1,7 +1,7 @@
-resource "azurerm_linux_virtual_machine" "traffic_gen" {
-  name                = "vm-traffic-generator"
-  resource_group_name = azurerm_resource_group.traffic_gen.name
-  location            = azurerm_resource_group.traffic_gen.location
+resource "azurerm_linux_virtual_machine" "main" {
+  name                = local.name.virtual_machine
+  resource_group_name = azurerm_resource_group.main.name
+  location            = azurerm_resource_group.main.location
   size                = var.vm_size
 
   admin_username                  = var.admin_username
@@ -9,10 +9,10 @@ resource "azurerm_linux_virtual_machine" "traffic_gen" {
 
   admin_ssh_key {
     username   = var.admin_username
-    public_key = file(var.ssh_public_key_path)
+    public_key = file(pathexpand(var.ssh_public_key_path))
   }
 
-  network_interface_ids = [azurerm_network_interface.traffic_gen.id]
+  network_interface_ids = [azurerm_network_interface.main.id]
 
   os_disk {
     caching              = "ReadWrite"
@@ -33,5 +33,5 @@ resource "azurerm_linux_virtual_machine" "traffic_gen" {
     tool_tier        = var.tool_tier
   }))
 
-  tags = azurerm_resource_group.traffic_gen.tags
+  tags = azurerm_resource_group.main.tags
 }

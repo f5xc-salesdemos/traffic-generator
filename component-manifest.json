@@ -1,15 +1,130 @@
 {
-  "schema_version": "1",
+  "schema_version": "2",
   "name": "traffic-generator",
+  "display_name": "Traffic Generator",
   "role": "Attack traffic and legitimate traffic generation VM",
   "category": "lab-infrastructure",
   "summary": "Azure Ubuntu 24.04 VM with 50+ security testing tools and 7 pre-built attack suites for generating WAF, API, bot, reconnaissance, SSL, and JavaScript exploit traffic against F5 Distributed Cloud protected applications",
+
   "provides": ["attack-traffic", "legitimate-traffic", "security-scanning", "api-fuzzing", "bot-simulation"],
   "pairs_with": ["origin-server", "cdn-simulator"],
   "demos": ["waf", "api-security", "bot-standard", "bot-advanced", "ddos", "was"],
+
   "terraform": {
-    "required_vars": ["subscription_id", "target_fqdn"],
-    "vm_size": "Standard_F16s_v2",
-    "estimated_monthly_cost": "$389"
+    "required_inputs": {
+      "subscription_id": {
+        "type": "string",
+        "description": "Azure subscription ID"
+      },
+      "target_fqdn": {
+        "type": "string",
+        "description": "FQDN of the F5 XC load balancer to target"
+      }
+    },
+    "optional_inputs": {
+      "deployer": {
+        "type": "string",
+        "default": "",
+        "description": "Override for deployer identifier (auto-resolved from Azure AD if empty)"
+      },
+      "location": {
+        "type": "string",
+        "default": "eastus2",
+        "description": "Azure region for all resources"
+      },
+      "environment": {
+        "type": "string",
+        "default": "lab",
+        "description": "Environment label used in resource group naming and tags"
+      },
+      "vm_size": {
+        "type": "string",
+        "default": "Standard_F16s_v2",
+        "description": "Azure VM size (F16s_v2: 16 vCPU compute-optimized)"
+      },
+      "disk_size_gb": {
+        "type": "number",
+        "default": 64,
+        "description": "OS disk size in GB"
+      },
+      "admin_username": {
+        "type": "string",
+        "default": "azureuser",
+        "description": "SSH admin username for the VM"
+      },
+      "ssh_public_key_path": {
+        "type": "string",
+        "default": "~/.ssh/id_ed25519.pub",
+        "description": "Path to the SSH public key file"
+      },
+      "tags": {
+        "type": "map(string)",
+        "default": {},
+        "description": "Additional tags merged with standard tags"
+      },
+      "target_origin_ip": {
+        "type": "string",
+        "default": "",
+        "description": "Direct origin IP for bypass testing"
+      },
+      "tool_tier": {
+        "type": "string",
+        "default": "standard",
+        "description": "Tool installation tier: standard or full (includes ZAP, Metasploit)"
+      }
+    },
+    "standard_outputs": [
+      "deployer",
+      "resource_group_name",
+      "resource_group_id",
+      "location",
+      "public_ip",
+      "private_ip",
+      "ssh_command",
+      "vm_name",
+      "vm_id",
+      "nsg_name",
+      "nsg_id",
+      "vnet_name",
+      "subnet_id",
+      "component",
+      "environment"
+    ],
+    "component_outputs": {
+      "target_fqdn": {
+        "type": "string",
+        "description": "Target FQDN the traffic generator is configured to attack"
+      },
+      "status_check": {
+        "type": "string",
+        "description": "SSH command to check provisioning status"
+      }
+    },
+    "estimated_monthly_cost": "$389",
+    "vm_image": {
+      "publisher": "Canonical",
+      "offer": "ubuntu-24_04-lts",
+      "sku": "server",
+      "version": "latest"
+    }
+  },
+
+  "nsg_rules": [
+    {
+      "name": "AllowSSH",
+      "priority": 100,
+      "direction": "Inbound",
+      "access": "Allow",
+      "protocol": "Tcp",
+      "destination_port_range": "22",
+      "source_address_prefix": "*",
+      "description": "SSH access for administration"
+    }
+  ],
+
+  "health_check": {
+    "path": null,
+    "port": null,
+    "expected_status": null
   }
 }

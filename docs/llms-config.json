@@ -2,7 +2,7 @@
   "customSets": [
     {
       "label": "Deployment",
-      "description": "Terraform IaC deployment with all configuration files",
+      "description": "Terraform IaC deployment with prerequisites and teardown",
       "paths": ["02-prerequisites*", "03-deploy*", "08-teardown*"]
     },
     {

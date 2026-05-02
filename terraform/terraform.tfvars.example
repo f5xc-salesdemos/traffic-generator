@@ -1,8 +1,18 @@
-subscription_id    = "00000000-0000-0000-0000-000000000000"
-target_fqdn        = "demo.example.com"
-deployer           = "robin"           # your initials or first name → rg-traffic-generator-robin
-# resource_group_name = ""            # leave blank to auto-generate from deployer
-# target_origin_ip = "10.0.0.4"
-# tool_tier        = "full"
-# vm_size          = "Standard_F16s_v2"
-# disk_size_gb     = 128
+# Copy this file to terraform.tfvars and fill in your values.
+# terraform.tfvars is gitignored — never commit real credentials.
+
+# --- Required ---
+subscription_id = "00000000-0000-0000-0000-000000000000"
+target_fqdn     = "demo.example.com"
+
+# --- Optional overrides (defaults shown) ---
+# deployer            = ""                       # auto-resolved from Azure AD
+# location            = "eastus2"
+# environment         = "lab"
+# vm_size             = "Standard_F16s_v2"
+# disk_size_gb        = 64
+# admin_username      = "azureuser"
+# ssh_public_key_path = "~/.ssh/id_ed25519.pub"
+# tags                = {}
+# target_origin_ip    = ""
+# tool_tier           = "standard"
