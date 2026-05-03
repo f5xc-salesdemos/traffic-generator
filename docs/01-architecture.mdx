@@ -24,7 +24,7 @@ graph LR
     TG[Traffic Generator VM<br/>Ubuntu 24.04<br/>Standard_F16s_v2] -->|Attack Traffic<br/>HTTPS| XCHLB[F5 XC HTTP LB<br/>WAF / Bot Defense<br/>API Security / CSD]
     XCHLB -->|Filtered Traffic<br/>HTTP| ORIGIN[Origin Server VM<br/>nginx + Docker Apps]
     TG -->|Direct Baseline<br/>HTTP optional| ORIGIN
-    RUNNER[runner.sh] --> SUITES[7 Traffic Suites]
+    RUNNER[runner.sh] --> SUITES[17 Traffic Suites]
     SUITES --> TG
 ```
 
@@ -51,7 +51,7 @@ The Traffic Generator VM runs on Azure with:
 
 ## Tiered Installation
 
-The Traffic Generator supports two installation tiers controlled by the `install_tier` Terraform variable:
+The Traffic Generator supports two installation tiers controlled by the `tool_tier` Terraform variable:
 
 ### Standard Tier (default)
 
@@ -61,15 +61,7 @@ Installs all tools listed in the tool catalog except ZAP and Metasploit. Provisi
 
 Adds OWASP ZAP and Metasploit Framework on top of the standard tier. Provisioning takes approximately 25 minutes. These tools are large (ZAP ~500 MiB, Metasploit ~1 GiB) and are only needed for advanced vulnerability scanning demos.
 
-## Estimated Costs
-
-| Resource | SKU | Estimated Monthly Cost |
-|---|---|---|
-| Ubuntu 24.04 VM | Standard_F16s_v2 (16 vCPU, 32 GiB) | ~$375 USD |
-| Public IP | Standard, Static | ~$4 USD |
-| OS Disk | 64 GiB Premium SSD | ~$10 USD |
-| VNet + NSG | -- | No additional cost |
-| **Total** | | **~$389 USD/month** |
+See the Azure pricing calculator for current VM costs. The default Standard_F16s_v2 is a compute-optimized instance suitable for sustained traffic generation.
 
 :::tip
 Use `terraform destroy` when the lab is not in use to avoid ongoing charges. See [Teardown](../08-teardown/) for the procedure.

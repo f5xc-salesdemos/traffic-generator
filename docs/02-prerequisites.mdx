@@ -15,7 +15,7 @@ An active Azure subscription with Contributor role or equivalent permissions to 
 - Virtual networks and subnets
 - Network security groups
 - Public IP addresses
-- Virtual machines (Standard_D4s_v3 -- 4 vCPU, 16 GiB RAM)
+- Virtual machines (Standard_F16s_v2 default)
 
 ### Azure CLI
 
@@ -77,20 +77,10 @@ Before deploying the Traffic Generator, you should have:
 
 The `target_fqdn` Terraform variable should be set to the F5 XC load balancer's public domain.
 
-## Resource Estimates
-
-| Resource | SKU | Estimated Monthly Cost |
-|---|---|---|
-| Ubuntu 24.04 VM | Standard_D4s_v3 (4 vCPU, 16 GiB) | ~$130 USD |
-| Public IP | Standard, Static | ~$4 USD |
-| OS Disk | 64 GiB Premium SSD | ~$10 USD |
-| VNet + NSG | -- | No additional cost |
-| **Total** | | **~$140 USD/month** |
-
 :::tip
 Use `terraform destroy` when the lab is not in use to avoid ongoing charges. See [Teardown](../08-teardown/) for the procedure.
 :::
 
 :::note
-Standard_D4s_v3 (16 GiB RAM) is recommended because several tools run concurrently during suite execution. Browser automation (Playwright, Puppeteer) with headless Chromium is the primary memory consumer. Standard_D2s_v3 (8 GiB) will work for non-browser suites but may be tight when running bot-simulation.
+Standard_F16s_v2 (32 GiB RAM) is the default because several tools run concurrently during suite execution. Browser automation (Playwright, Puppeteer) with headless Chromium is the primary memory consumer. Smaller F-series SKUs will work for non-browser suites but may be tight when running bot-simulation.
 :::
