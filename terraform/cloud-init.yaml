@@ -275,18 +275,14 @@ runcmd:
     export DPKG_ARCH=$(dpkg --print-architecture)
     export PATH=/usr/local/bin:$PATH
 
-    echo "Installing hey..."
-    curl -fsSL "https://hey-release.s3.us-east-2.amazonaws.com/hey_linux_$${DPKG_ARCH}" -o /usr/local/bin/hey && chmod +x /usr/local/bin/hey || echo "hey S3 download failed, trying go install..."
-    if ! command -v hey >/dev/null 2>&1; then
-      apt-get install -y golang-go
-      GOPATH=/opt/go go install github.com/rakyll/hey@latest
-      cp /opt/go/bin/hey /usr/local/bin/hey
-    fi
+    echo "Installing hey (via go install — no prebuilt binaries available)..."
+    apt-get install -y golang-go
+    GOPATH=/opt/go go install github.com/rakyll/hey@latest
+    cp /opt/go/bin/hey /usr/local/bin/hey
 
     echo "Installing vegeta..."
     VEGETA_VER=$(ghlatest tsenart/vegeta)
-    if [ "$DPKG_ARCH" = "amd64" ]; then VA="64bit"; else VA="$DPKG_ARCH"; fi
-    curl -fsSL "https://github.com/tsenart/vegeta/releases/download/v$${VEGETA_VER}/vegeta_$${VEGETA_VER}_linux_$${VA}.tar.gz" | tar -xz -C /usr/local/bin vegeta
+    curl -fsSL "https://github.com/tsenart/vegeta/releases/download/v$${VEGETA_VER}/vegeta_$${VEGETA_VER}_linux_$${DPKG_ARCH}.tar.gz" | tar -xz -C /usr/local/bin vegeta
 
     echo "Phase 3b complete"
 
