@@ -12,8 +12,14 @@ SSH_USER="azureuser"
 shift || true
 while [ $# -gt 0 ]; do
   case "$1" in
-    --user) SSH_USER="${2:?--user requires a value}"; shift ;;
-    *) echo "Unknown option: $1"; exit 1 ;;
+  --user)
+    SSH_USER="${2:?--user requires a value}"
+    shift
+    ;;
+  *)
+    echo "Unknown option: $1"
+    exit 1
+    ;;
   esac
   shift
 done
