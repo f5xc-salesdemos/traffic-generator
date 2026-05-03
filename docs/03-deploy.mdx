@@ -16,6 +16,20 @@ cp terraform.tfvars.example terraform.tfvars
 
 ## Terraform Configuration
 
+### Terraform File Structure
+
+The terraform directory contains 9 files following the Demo Resource Standard:
+
+- `versions.tf` -- Terraform and provider version constraints (azurerm ~> 4.0, azuread ~> 3.0)
+- `providers.tf` -- Azure RM and Azure AD provider configuration
+- `data.tf` -- Azure AD data sources for deployer auto-resolution
+- `locals.tf` -- Deployer resolution, Azure Cloud Adoption Framework resource naming, standard tags
+- `main.tf` -- Resource group (named `rg-traffic-generator-{environment}-{deployer}`)
+- `variables.tf` -- All input variables (2 required, 9 optional) with deployer auto-resolution via Azure AD
+- `network.tf` -- VNet (10.201.0.0/16), subnet, public IP, NSG (port 22 SSH), NIC
+- `vm.tf` -- Ubuntu 24.04 VM with cloud-init via templatefile()
+- `outputs.tf` -- 17 outputs: 15 standard outputs shared by all demo resources (deployer, public_ip, private_ip, ssh_command, resource_group_name, vm_name, nsg_name, vnet_name, subnet_id, component, environment, resource_group_id, vm_id, nsg_id, location) plus 2 component-specific outputs (target_fqdn, status_check)
+
 ### Provider and Variables
 
 `main.tf` configures the Azure provider:
@@ -23,7 +37,7 @@ cp terraform.tfvars.example terraform.tfvars
 ```hcl file=./_data/main.tf
 ```
 
-`variables.tf` defines all configurable parameters. The `vm_size` default is `Standard_F16s_v2` (16 vCPU compute-optimized) — see [VM Sizing](#vm-sizing) for scaling guidance:
+`variables.tf` defines all configurable parameters. The `vm_size` default is `Standard_F16s_v2` (16 vCPU compute-optimized) -- see [VM Sizing](#vm-sizing) for scaling guidance:
 
 ```hcl file=./_data/variables.tf
 ```
@@ -44,18 +58,18 @@ cp terraform.tfvars.example terraform.tfvars
 
 ### Cloud-Init Provisioning
 
-`cloud-init.yaml` is the production-validated configuration verified under 48+ hours of continuous load testing including 4 rounds of origin torture testing. It provisions:
+`cloud-init.yaml` is the production-validated configuration verified under 48+ hours of continuous load testing including 4 rounds of origin torture testing. It uses a helper library with retry logic, progress logging to `/var/log/cloud-init-progress.log`, 9 provisioning phases, and conditional status reporting (ready/degraded in `status.json`). It provisions:
 
-- **Kernel tuning** — `somaxconn=131072`, `tcp_max_tw_buckets=4000000`, `tcp_fin_timeout=5`, 64 MiB socket buffers, `file-max=4194304`
-- **NIC optimization** — RPS/RFS across all cores, maximized ring buffers via ethtool, THP=always
-- **APT packages** — nikto, nmap, masscan, sqlmap, hydra, medusa, ncrack, tshark, hping3, tcpdump, netcat, ngrep, iperf3, mtr, sslscan, socat, dirb, whatweb, wrk, hey, vegeta, ethtool
-- **GitHub Releases** — nuclei, dalfox, ffuf, gobuster, feroxbuster, subfinder, httpx, amass
-- **Python packages** — mitmproxy, sslyze, dnsrecon, fierce, theHarvester, playwright, scapy, impacket, arjun
-- **Node.js 20.x** — Puppeteer with stealth plugin for bot simulation
-- **Browser automation** — Playwright Chromium for headless browser testing
-- **Git clones** — testssl.sh, recon-ng, spiderfoot, SecLists
-- **Suite deployment** — 17 traffic suites cloned from this repository to `/opt/traffic-generator/suites/`
-- **Config file** — `config.env` with `TARGET_FQDN`, `TARGET_ORIGIN_IP`, and `CRAPI_PORT`
+- **Kernel tuning** -- `somaxconn=131072`, `tcp_max_tw_buckets=4000000`, `tcp_fin_timeout=5`, 64 MiB socket buffers, `file-max=4194304`
+- **NIC optimization** -- RPS/RFS across all cores, maximized ring buffers via ethtool, THP=always
+- **APT packages** -- nikto, nmap, masscan, sqlmap, hydra, medusa, ncrack, tshark, hping3, tcpdump, netcat, ngrep, iperf3, mtr, sslscan, socat, dirb, whatweb, wrk, hey, vegeta, ethtool
+- **GitHub Releases** -- nuclei, dalfox, ffuf, gobuster, feroxbuster, subfinder, httpx, amass
+- **Python packages** -- mitmproxy, sslyze, dnsrecon, fierce, theHarvester, playwright, scapy, impacket, arjun
+- **Node.js 20.x** -- Puppeteer with stealth plugin for bot simulation
+- **Browser automation** -- Playwright Chromium for headless browser testing
+- **Git clones** -- testssl.sh, recon-ng, spiderfoot, SecLists
+- **Suite deployment** -- 17 traffic suites cloned from this repository to `/opt/traffic-generator/suites/`
+- **Config file** -- `config.env` with `TARGET_FQDN`, `TARGET_ORIGIN_IP`, and `CRAPI_PORT`
 
 The cloud-init uses Terraform template variables: `${target_fqdn}`, `${target_origin_ip}`, and `${tool_tier}`. Shell variables like `$NPROC` are escaped as `$$NPROC` in the Terraform templatefile.
 
@@ -64,7 +78,7 @@ The cloud-init uses Terraform template variables: `${target_fqdn}`, `${target_or
 
 ### Outputs
 
-`outputs.tf` exposes the public IP, SSH command, target FQDN, status check, and resource group:
+`outputs.tf` exposes 17 outputs including public/private IP, SSH command, resource identifiers, and component-specific values (target_fqdn, status_check):
 
 ```hcl file=./_data/outputs.tf
 ```
@@ -94,13 +108,13 @@ Terraform outputs the public IP, SSH command, and target FQDN after successful d
 
 The F-series compute-optimized VMs are recommended for this CPU-bound traffic generation workload. The cloud-init kernel tuning and tool concurrency scale automatically with vCPU count.
 
-| VM SKU | vCPU | RAM | Network | Use Case | Est. Monthly |
-|---|---|---|---|---|---|
-| Standard_F4s_v2 | 4 | 8 GiB | 10 Gbps | Light lab/demo | ~$97 |
-| Standard_F8s_v2 | 8 | 16 GiB | 12.5 Gbps | Standard demos | ~$194 |
-| Standard_F16s_v2 | 16 | 32 GiB | 12.5 Gbps | Load testing (default) | ~$389 |
-| Standard_F32s_v2 | 32 | 64 GiB | 16 Gbps | Heavy benchmarking | ~$778 |
-| Standard_D16s_v3 | 16 | 64 GiB | 12.5 Gbps | RAM-heavy workloads | ~$439 |
+| VM SKU | vCPU | RAM | Network | Use Case |
+|---|---|---|---|---|
+| Standard_F4s_v2 | 4 | 8 GiB | 10 Gbps | Light lab/demo |
+| Standard_F8s_v2 | 8 | 16 GiB | 12.5 Gbps | Standard demos |
+| Standard_F16s_v2 | 16 | 32 GiB | 12.5 Gbps | Load testing (default) |
+| Standard_F32s_v2 | 32 | 64 GiB | 16 Gbps | Heavy benchmarking |
+| Standard_D16s_v3 | 16 | 64 GiB | 12.5 Gbps | RAM-heavy workloads |
 
 :::tip
 F16s_v2 was validated as the optimal price-performance option by A/B/C/D benchmark testing against CDN F16s_v2 and F32s_v2 targets. See [benchmarks/](https://github.com/f5xc-salesdemos/traffic-generator/tree/main/benchmarks) for full results.
@@ -177,11 +191,23 @@ ls /opt/traffic-generator/suites/*/
 
 | Output | Description | Example |
 |---|---|---|
+| `deployer` | Resolved deployer identifier | `jsmith` |
 | `public_ip` | Public IP address of the traffic generator VM | `20.12.78.200` |
+| `private_ip` | Private IP address of the VM | `10.201.0.4` |
 | `ssh_command` | SSH command to connect to the VM | `ssh azureuser@20.12.78.200` |
+| `resource_group_name` | Resource group name | `rg-traffic-generator-dev-jsmith` |
+| `resource_group_id` | Resource group Azure resource ID | `/subscriptions/.../resourceGroups/rg-traffic-generator-dev-jsmith` |
+| `vm_name` | Virtual machine name | `vm-traffic-generator-dev-jsmith` |
+| `vm_id` | Virtual machine Azure resource ID | `/subscriptions/.../virtualMachines/vm-traffic-generator-dev-jsmith` |
+| `nsg_name` | Network security group name | `nsg-traffic-generator-dev-jsmith` |
+| `nsg_id` | Network security group Azure resource ID | `/subscriptions/.../networkSecurityGroups/nsg-traffic-generator-dev-jsmith` |
+| `vnet_name` | Virtual network name | `vnet-traffic-generator-dev-jsmith` |
+| `subnet_id` | Subnet Azure resource ID | `/subscriptions/.../subnets/snet-traffic-generator-dev-jsmith` |
+| `component` | Component identifier | `traffic-generator` |
+| `environment` | Deployment environment | `dev` |
+| `location` | Azure region | `eastus2` |
 | `target_fqdn` | Configured target FQDN for traffic suites | `demo.example.com` |
 | `status_check` | Command to check provisioning status | `ssh azureuser@20.12.78.200 cat /opt/traffic-generator/status.json` |
-| `resource_group` | Resource group containing all resources | `rg-traffic-generator` |
 
 Retrieve any output:
 
