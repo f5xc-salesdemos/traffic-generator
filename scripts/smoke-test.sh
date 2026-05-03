@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-set -euo pipefail
+set -uo pipefail
 
 # Traffic Generator Post-Boot Smoke Test Suite
 # Deterministic validation of all components after deployment or reboot.
@@ -126,7 +126,7 @@ check "tool-nmap-installed" "true" "$([ -n "$NMAP_VER" ] && echo true || echo fa
 GOBUSTER_VER=$(ssh_cmd "gobuster version 2>&1 | head -1" || echo "")
 check "tool-gobuster-installed" "true" "$([ -n "$GOBUSTER_VER" ] && echo true || echo false)"
 
-HTTPX_VER=$(ssh_cmd "httpx -version 2>&1 | head -1" || echo "")
+HTTPX_VER=$(ssh_cmd "httpx -version 2>&1 | grep -i version | head -1" || echo "")
 check "tool-httpx-installed" "true" "$([ -n "$HTTPX_VER" ] && echo true || echo false)"
 
 FFUF_VER=$(ssh_cmd "ffuf -V 2>&1 | head -1" || echo "")
@@ -174,7 +174,7 @@ echo "── Test Suites ──"
 SUITE_COUNT=$(ssh_cmd "find /opt/traffic-generator/suites/ -mindepth 1 -maxdepth 1 -type d 2>/dev/null | wc -l" || echo "0")
 check "suite-count-17" "17" "$SUITE_COUNT"
 
-RUNNER_EXEC=$(ssh_cmd "test -x /opt/traffic-generator/runner.sh && echo yes || echo no")
+RUNNER_EXEC=$(ssh_cmd "test -x /opt/traffic-generator/suites/runner.sh && echo yes || echo no")
 check "runner-sh-executable" "yes" "$RUNNER_EXEC"
 
 CONFIG_ENV=$(ssh_cmd "cat /opt/traffic-generator/config.env 2>/dev/null" || echo "")
