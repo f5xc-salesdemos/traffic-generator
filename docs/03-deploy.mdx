@@ -216,4 +216,22 @@ terraform output -raw public_ip
 terraform output -raw ssh_command
 ```
 
+## Wiring from Upstream Components
+
+The traffic generator targets an F5 XC HTTP load balancer that fronts the origin server. Deploy the origin server first, configure F5 XC, then set `target_fqdn` to the load balancer's FQDN:
+
+```bash
+# After deploying origin-server and creating an F5 XC HTTP load balancer:
+cat > terraform.tfvars <<EOF
+subscription_id  = "your-subscription-id"
+target_fqdn      = "your-xc-load-balancer.example.com"
+target_origin_ip = "$(cd ../../origin-server/terraform && terraform output -raw public_ip)"
+EOF
+```
+
+| Required Variable | Source | Description |
+|---|---|---|
+| `target_fqdn` | F5 XC console | FQDN of the HTTP load balancer protecting the origin server |
+| `target_origin_ip` | Origin server `public_ip` output | Direct origin IP for bypass testing (optional) |
+
 Proceed to [Tool Catalog](../04-tool-catalog/) for the full tool reference or [Suites](../05-suites/) to start generating traffic.
