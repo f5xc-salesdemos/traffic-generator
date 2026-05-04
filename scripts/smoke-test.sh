@@ -145,8 +145,8 @@ check "tool-jq-installed" "true" "$([ -n "$JQ_VER" ] && echo true || echo false)
 
 echo "── Load Testing Tools ──"
 
-HEY_OUT=$(ssh_cmd "hey -n 1 -c 1 http://localhost 2>&1 | head -1" || echo "")
-check "tool-hey-installed" "true" "$([ -n "$HEY_OUT" ] && echo true || echo false)"
+HEY_PATH=$(ssh_cmd "command -v hey" || echo "")
+check "tool-hey-installed" "true" "$([ -n "$HEY_PATH" ] && echo true || echo false)"
 
 VEGETA_VER=$(ssh_cmd "vegeta --version 2>&1 | head -1" || echo "")
 check "tool-vegeta-installed" "true" "$([ -n "$VEGETA_VER" ] && echo true || echo false)"
