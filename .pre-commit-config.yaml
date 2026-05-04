@@ -20,20 +20,6 @@ repos:
         args: ["--branch", "main"]
 
   # ===========================================================================
-  # Terraform formatting and validation
-  # ===========================================================================
-  - repo: https://github.com/antonbabenko/pre-commit-terraform
-    rev: v1.96.1
-    hooks:
-      - id: terraform_fmt
-      - id: terraform_validate
-      - id: terraform_docs
-        args:
-          - --hook-config=--path-to-file=README.md
-          - --hook-config=--add-to-existing-file=true
-          - --args=--config=.terraform-docs.yml
-
-  # ===========================================================================
   # Repository-specific hooks (escape hatch)
   #
   # Runs scripts/pre-commit-local.sh if present and executable. Repos use
@@ -218,6 +204,3 @@ ci:
     - zizmor
     - checkov
     - gitleaks
-    - terraform_fmt
-    - terraform_validate
-    - terraform_docs

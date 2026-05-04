@@ -1,41 +1,23 @@
-# shellcheck configuration for traffic-generator
-# This repo contains attack simulation scripts with intentional patterns
-# that trigger false positives.
-
 # Disable SC2016: Expressions don't expand in single quotes.
 # All single-quoted $var references in this repo are intentional jq variables,
 # not missed shell expansions.
 disable=SC2016
 
-# Disable SC2034: Variable appears unused.
-# Attack scripts set variables for use in sourced library scripts (_lib.sh,
-# _crapi-lib.sh, etc.) and trap handlers.
-disable=SC2034
-
 # Disable SC1091: Not following sourced file.
-# Scripts source _lib.sh, _crapi-lib.sh, etc. via relative paths.
+# Scripts source relative-path libraries (_lib.sh, _crapi-lib.sh, etc.)
+# that shellcheck cannot resolve in CI.
 disable=SC1091
 
+# Disable SC2034: Variable appears unused.
+# Scripts set variables consumed by sourced library files or trap handlers.
+disable=SC2034
+
 # Disable SC2064: Use single quotes for trap to prevent early expansion.
-# Attack scripts intentionally expand variables at trap-set time.
+# Scripts intentionally expand variables at trap-set time.
 disable=SC2064
 
-# Disable SC2045: Iterating over ls output is fragile.
-# Runner scripts iterate over numbered test scripts in controlled directories.
-disable=SC2045
-
-# Disable SC2002: Useless cat.
-disable=SC2002
-
-# Disable SC2106: This only exits the subshell.
-disable=SC2106
-
-# Disable SC2012: Use find instead of ls.
-# Scripts use ls -d to count kernel queue directories.
-disable=SC2012
-
 # Disable SC2086: Double quote to prevent globbing and word splitting.
-# PID lists and attack payloads intentionally rely on word splitting.
+# Pipeline scripts and attack suites intentionally rely on word splitting.
 disable=SC2086
 
 # Disable SC2030: Modification of variable is local to subshell.
@@ -45,14 +27,13 @@ disable=SC2030
 # Disable SC2031: Variable was modified in a subshell.
 disable=SC2031
 
+# Disable SC2045: Iterating over ls output is fragile.
+# Runner scripts iterate over numbered scripts in controlled directories.
+disable=SC2045
+
+# Disable SC2012: Use find instead of ls.
+disable=SC2012
+
 # Disable SC2001: See if you can use ${variable//search/replace}.
-# Attack scripts use sed for complex regex patterns.
+# Scripts use sed for complex regex patterns.
 disable=SC2001
-
-# Disable SC2155: Declare and assign separately.
-# Attack scripts use compact local+assign for readability.
-disable=SC2155
-
-# Disable SC2000: See if you can use ${#variable} instead.
-# Scripts use echo | wc -c for byte counting in pipeline context.
-disable=SC2000
