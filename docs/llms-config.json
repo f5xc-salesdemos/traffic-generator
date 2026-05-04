@@ -2,7 +2,7 @@
   "customSets": [
     {
       "label": "Deployment",
-      "description": "Terraform IaC deployment with prerequisites and teardown",
+      "description": "Traffic Generator Terraform deployment — requires subscription_id and target_fqdn of the F5 XC load balancer",
       "paths": ["02-prerequisites*", "03-deploy*", "08-teardown*"]
     },
     {
