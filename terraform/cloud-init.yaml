@@ -74,11 +74,17 @@ write_files:
       set -e
       REPO="$1"
       if [ -z "$REPO" ]; then echo "Usage: ghlatest owner/repo" >&2; exit 1; fi
-      R=0; M=8
+      R=0; M=3
       while [ "$R" -lt "$M" ]; do
-        V=$(curl -fsSL "https://api.github.com/repos/$REPO/releases/latest" 2>/dev/null | grep '"tag_name"' | head -1 | sed 's/.*"tag_name"[[:space:]]*:[[:space:]]*"v\{0,1\}\([^"]*\)".*/\1/')
+        RESP=$(curl -fsSL -w "\n%{http_code}" "https://api.github.com/repos/$REPO/releases/latest" 2>/dev/null) || true
+        HTTP_CODE=$(echo "$RESP" | tail -1)
+        BODY=$(echo "$RESP" | sed '$d')
+        if [ "$HTTP_CODE" = "403" ] || [ "$HTTP_CODE" = "429" ]; then
+          echo "WARN: ghlatest rate-limited ($HTTP_CODE) for $REPO" >&2; exit 1
+        fi
+        V=$(echo "$BODY" | grep '"tag_name"' | head -1 | sed 's/.*"tag_name"[[:space:]]*:[[:space:]]*"v\{0,1\}\([^"]*\)".*/\1/')
         if [ -n "$V" ]; then echo "$V"; exit 0; fi
-        R=$((R + 1)); sleep $((R * 2))
+        R=$((R + 1)); sleep $((R * 3))
       done
       echo "ERROR: ghlatest failed for $REPO" >&2; exit 1
 
@@ -330,8 +336,8 @@ runcmd:
 
     echo "Installing amass..."
     AMASS_VER=$(ghlatest owasp-amass/amass)
-    fetch_url "https://github.com/owasp-amass/amass/releases/download/v$${AMASS_VER}/amass_Linux_$${DPKG_ARCH}.zip" /tmp/amass.zip "amass"
-    unzip -oq /tmp/amass.zip -d /tmp/amass && cp /tmp/amass/amass_Linux_$${DPKG_ARCH}/amass /usr/local/bin/ && rm -rf /tmp/amass /tmp/amass.zip
+    fetch_url "https://github.com/owasp-amass/amass/releases/download/v$${AMASS_VER}/amass_linux_$${DPKG_ARCH}.tar.gz" /tmp/amass.tar.gz "amass"
+    mkdir -p /tmp/amass && tar -xzf /tmp/amass.tar.gz -C /tmp/amass && cp /tmp/amass/amass_linux_$${DPKG_ARCH}/amass /usr/local/bin/ && rm -rf /tmp/amass /tmp/amass.tar.gz
 
     echo "Phase 3 complete"
 
@@ -344,6 +350,7 @@ runcmd:
 
     echo "Installing hey (via go install — no prebuilt binaries available)..."
     install_packages golang-go
+    mkdir -p /opt/go/bin
     retry_cmd 3 15 sh -c 'GOPATH=/opt/go go install github.com/rakyll/hey@latest'
     cp /opt/go/bin/hey /usr/local/bin/hey
 
