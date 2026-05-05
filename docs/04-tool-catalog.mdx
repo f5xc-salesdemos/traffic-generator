@@ -20,6 +20,16 @@ Every tool listed below is pre-installed during cloud-init provisioning. No manu
 | feroxbuster | ghlatest | `feroxbuster -u https://TARGET -w /opt/SecLists/Discovery/Web-Content/raft-medium-directories.txt` | reconnaissance |
 | dirb | apt | `dirb https://TARGET /usr/share/dirb/wordlists/common.txt` | reconnaissance |
 | whatweb | apt | `whatweb https://TARGET` | reconnaissance |
+| wfuzz | pip | `wfuzz -c -z file,wordlist.txt -e urlencode,double_urlencode "https://TARGET/FUZZ"` | waf-encoding-evasion |
+
+## WAF Evasion Testing
+
+| Tool | Install Method | Example Command | Used By Suite |
+|---|---|---|---|
+| gotestwaf | go install | `cd /opt/gotestwaf && gotestwaf --url https://TARGET --noEmailReport --includePayloads=false` | waf-encoding-evasion |
+| waf-bypass | git clone + pip | `waf-bypass --host TARGET:443 --timeout 10 --threads 10` | waf-encoding-evasion |
+
+GoTestWAF (by Wallarm) is an industry-standard WAF assessment framework that multiplies payloads across multiple encoders (URL, Base64, JSUnicode) and placement zones (body, header, URL param, cookie). waf-bypass (by Nemesida) sends payloads with Base64, HTML-ENTITY, and UTF-16 encoding across ARGS, BODY, COOKIE, and HEADER zones.
 
 ## Network Analysis
 
@@ -98,8 +108,10 @@ Playwright installs its own Chromium binary via `playwright install chromium`. P
 | recon-ng | git clone | `/opt/recon-ng/` | reconnaissance |
 | spiderfoot | git clone | `/opt/spiderfoot/` | reconnaissance |
 | SecLists | git clone | `/opt/SecLists/` | web-app-attacks, api-attacks, reconnaissance |
+| PayloadsAllTheThings | git clone | `/opt/PayloadsAllTheThings/` | waf-encoding-evasion |
+| waf-bypass payloads | git clone | `/opt/waf-bypass/` | waf-encoding-evasion |
 
-SecLists provides wordlists used by multiple tools including ffuf, gobuster, feroxbuster, dirb, and hydra.
+SecLists provides wordlists used by multiple tools including ffuf, gobuster, feroxbuster, dirb, and hydra. PayloadsAllTheThings provides curated multi-encoding attack payloads organized by attack class (XSS, SQLi, XXE) with hex, octal, Unicode, HTML entity, double URL encoding, and JSFuck variants.
 
 ## Full Tier Only
 
@@ -123,5 +135,7 @@ ZAP and Metasploit add approximately 1.5 GiB to the disk footprint and 5-10 minu
 | uv | Installed as a Python tool using the `uv` package manager |
 | pip | Installed as a Python package using `pip install` into the system Python |
 | npm | Installed as a global Node.js package using `npm install -g` |
+| go install | Compiled from source using `go install` and installed to `/usr/local/bin` |
 | git clone | Repository cloned to `/opt/` directory |
+| git clone + pip | Repository cloned and Python dependencies installed |
 | installer script | Vendor-provided installer script executed during cloud-init |

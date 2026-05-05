@@ -76,7 +76,7 @@ write_files:
       if [ -z "$REPO" ]; then echo "Usage: ghlatest owner/repo" >&2; exit 1; fi
       R=0; M=3
       while [ "$R" -lt "$M" ]; do
-        RESP=$(curl -fsSL -w "\n%{http_code}" "https://api.github.com/repos/$REPO/releases/latest" 2>/dev/null) || true
+        RESP=$(curl -fsSL -w "\n%%{http_code}" "https://api.github.com/repos/$REPO/releases/latest" 2>/dev/null) || true
         HTTP_CODE=$(echo "$RESP" | tail -1)
         BODY=$(echo "$RESP" | sed '$d')
         if [ "$HTTP_CODE" = "403" ] || [ "$HTTP_CODE" = "429" ]; then
@@ -351,8 +351,17 @@ runcmd:
     echo "Installing hey (via go install — no prebuilt binaries available)..."
     install_packages golang-go
     mkdir -p /opt/go/bin
+    chown -R azureuser:azureuser /opt/go
     retry_cmd 3 15 sh -c 'GOPATH=/opt/go go install github.com/rakyll/hey@latest'
     cp /opt/go/bin/hey /usr/local/bin/hey
+
+    echo "Installing gotestwaf..."
+    retry_cmd 3 15 sh -c 'GOPATH=/opt/go go install github.com/wallarm/gotestwaf/cmd/gotestwaf@latest'
+    cp /opt/go/bin/gotestwaf /usr/local/bin/gotestwaf
+    mkdir -p /opt/gotestwaf
+    cp -r /opt/go/pkg/mod/github.com/wallarm/gotestwaf@*/config.yaml /opt/gotestwaf/ 2>/dev/null || true
+    cp -r /opt/go/pkg/mod/github.com/wallarm/gotestwaf@*/testcases /opt/gotestwaf/ 2>/dev/null || true
+    chown -R azureuser:azureuser /opt/gotestwaf
 
     echo "Installing vegeta..."
     VEGETA_VER=$(ghlatest tsenart/vegeta)
@@ -366,6 +375,7 @@ runcmd:
     log_phase "phase4" "installing Python security tools"
     retry_cmd 3 10 pip install --retries 3 --break-system-packages scapy impacket arjun hashid pwntools
     retry_cmd 3 10 pip install --retries 3 --break-system-packages --ignore-installed typing_extensions mitmproxy sslyze
+    retry_cmd 3 10 pip install --retries 3 --break-system-packages wfuzz
 
   # --- Phase 5: Browser automation ---
   - |
@@ -387,6 +397,8 @@ runcmd:
     clone_repo "https://github.com/danielmiessler/SecLists.git" /opt/SecLists
     clone_repo "https://github.com/lanmaster53/recon-ng.git" /opt/recon-ng
     clone_repo "https://github.com/smicallef/spiderfoot.git" /opt/spiderfoot
+    clone_repo "https://github.com/nemesida-waf/waf-bypass.git" /opt/waf-bypass
+    clone_repo "https://github.com/swisskyrepo/PayloadsAllTheThings.git" /opt/PayloadsAllTheThings
 
   # --- Phase 7: ZAP (standard tier) + heavy frameworks (full tier) ---
   - |
@@ -425,7 +437,7 @@ runcmd:
     export NODE_PATH=/usr/lib/node_modules
     export PATH=/usr/local/bin:$PATH
     PASS=0; FAIL=0
-    for tool in nmap nikto sqlmap nuclei dalfox ffuf gobuster feroxbuster subfinder httpx sslscan hydra john hashcat masscan hping3 tshark wrk hey vegeta ab zap testssl arjun node npx playwright; do
+    for tool in nmap nikto sqlmap nuclei dalfox ffuf gobuster feroxbuster subfinder httpx sslscan hydra john hashcat masscan hping3 tshark wrk hey vegeta ab zap testssl arjun wfuzz gotestwaf node npx playwright; do
       if command -v "$tool" >/dev/null 2>&1; then PASS=$((PASS+1)); else FAIL=$((FAIL+1)); echo "MISSING: $tool"; fi
     done
     if [ "$FAIL" -eq 0 ]; then STATUS="ready"; else STATUS="degraded"; fi
