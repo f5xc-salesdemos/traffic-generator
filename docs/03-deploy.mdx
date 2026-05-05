@@ -1,6 +1,6 @@
 ---
 title: Deploy
-description: "Terraform IaC deployment of the traffic generator Azure VM — F-series compute-optimized VM with Ubuntu 24.04, kernel tuning, 50+ security tools, and 17 traffic suites provisioned via cloud-init. All configuration files are in the terraform/ directory."
+description: "Terraform IaC deployment of the traffic generator Azure VM — F-series compute-optimized VM with Ubuntu 24.04, kernel tuning, 50+ security tools, and 19 traffic suites provisioned via cloud-init. All configuration files are in the terraform/ directory."
 sidebar:
   order: 3
 ---
@@ -67,8 +67,8 @@ The terraform directory contains 9 files following the Demo Resource Standard:
 - **Python packages** -- mitmproxy, sslyze, dnsrecon, fierce, theHarvester, playwright, scapy, impacket, arjun
 - **Node.js 20.x** -- Puppeteer with stealth plugin for bot simulation
 - **Browser automation** -- Playwright Chromium for headless browser testing
-- **Git clones** -- testssl.sh, recon-ng, spiderfoot, SecLists
-- **Suite deployment** -- 17 traffic suites cloned from this repository to `/opt/traffic-generator/suites/`
+- **Git clones** -- testssl.sh, recon-ng, spiderfoot, SecLists, waf-bypass, PayloadsAllTheThings
+- **Suite deployment** -- 19 traffic suites cloned from this repository to `/opt/traffic-generator/suites/`
 - **Config file** -- `config.env` with `TARGET_FQDN`, `TARGET_ORIGIN_IP`, and `CRAPI_PORT`
 
 The cloud-init uses Terraform template variables: `${target_fqdn}`, `${target_origin_ip}`, and `${tool_tier}`. Shell variables like `$NPROC` are escaped as `$$NPROC` in the Terraform templatefile.

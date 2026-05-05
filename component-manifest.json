@@ -4,9 +4,9 @@
   "display_name": "Traffic Generator",
   "role": "Attack traffic and legitimate traffic generation VM",
   "category": "lab-infrastructure",
-  "summary": "Azure Ubuntu 24.04 VM with 50+ security testing tools and 7 pre-built attack suites for generating WAF, API, bot, reconnaissance, SSL, and JavaScript exploit traffic against F5 Distributed Cloud protected applications",
+  "summary": "Azure Ubuntu 24.04 VM with 50+ security testing tools and 19 pre-built attack suites for generating WAF, API, bot, reconnaissance, SSL, JavaScript exploit, and multi-layer encoding evasion traffic against F5 Distributed Cloud protected applications",
 
-  "provides": ["attack-traffic", "legitimate-traffic", "security-scanning", "api-fuzzing", "bot-simulation"],
+  "provides": ["attack-traffic", "legitimate-traffic", "security-scanning", "api-fuzzing", "bot-simulation", "waf-evasion-testing"],
   "pairs_with": ["origin-server", "cdn-simulator"],
   "demos": ["waf", "api-security", "bot-standard", "bot-advanced", "ddos", "was"],
 

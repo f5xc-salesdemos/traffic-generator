@@ -1,6 +1,6 @@
 ---
 title: Architecture
-description: "Ubuntu 24.04 Azure VM with 50+ pre-installed security tools organized into 17 traffic suites, targeting F5 XC HTTP load balancers protecting origin-server applications for WAF, Bot Defense, API Security, and CSD validation"
+description: "Ubuntu 24.04 Azure VM with 50+ pre-installed security tools organized into 19 traffic suites, targeting F5 XC HTTP load balancers protecting origin-server applications for WAF, Bot Defense, API Security, and CSD validation"
 sidebar:
   order: 1
 ---
@@ -24,7 +24,7 @@ graph LR
     TG[Traffic Generator VM<br/>Ubuntu 24.04<br/>Standard_F16s_v2] -->|Attack Traffic<br/>HTTPS| XCHLB[F5 XC HTTP LB<br/>WAF / Bot Defense<br/>API Security / CSD]
     XCHLB -->|Filtered Traffic<br/>HTTP| ORIGIN[Origin Server VM<br/>nginx + Docker Apps]
     TG -->|Direct Baseline<br/>HTTP optional| ORIGIN
-    RUNNER[runner.sh] --> SUITES[17 Traffic Suites]
+    RUNNER[runner.sh] --> SUITES[19 Traffic Suites]
     SUITES --> TG
 ```
 
@@ -32,7 +32,7 @@ The Traffic Generator VM runs on Azure with:
 
 - **Ubuntu 24.04 LTS** as the base image
 - **50+ security tools** installed via cloud-init during provisioning
-- **17 organized traffic suites** with numbered scripts executed in order
+- **19 organized traffic suites** with numbered scripts executed in order
 - **runner.sh** orchestrator for suite execution with results logging
 - **config.env** for target configuration (FQDN, origin IP)
 
@@ -47,6 +47,7 @@ The Traffic Generator VM runs on Azure with:
 | Browser Automation | playwright, puppeteer, puppeteer-extra-plugin-stealth | Bot simulation with headless Chrome |
 | Subdomain and DNS | subfinder, httpx, amass, dnsrecon, fierce, whois, dnsutils | Reconnaissance and enumeration |
 | Credential Testing | hydra, medusa, ncrack | Authentication attack simulation |
+| WAF Evasion Testing | gotestwaf, waf-bypass, wfuzz | Multi-layer encoding evasion and WAF bypass assessment |
 | Exploit Frameworks | ZAP, Metasploit (full tier only) | Comprehensive vulnerability scanning |
 
 ## Tiered Installation
@@ -55,7 +56,7 @@ The Traffic Generator supports two installation tiers controlled by the `tool_ti
 
 ### Standard Tier (default)
 
-Installs all tools listed in the tool catalog except ZAP and Metasploit. Provisioning completes in 15-20 minutes. This tier covers all 17 traffic suites and is sufficient for most demo scenarios.
+Installs all tools listed in the tool catalog except ZAP and Metasploit. Provisioning completes in 15-20 minutes. This tier covers all 19 traffic suites and is sufficient for most demo scenarios.
 
 ### Full Tier
 
