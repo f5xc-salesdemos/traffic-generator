@@ -34,24 +34,24 @@ echo ""
 echo "[+] Chunked transfer encoding (split payloads across chunks)"
 
 echo "  SQLi split across chunks..."
-code=$(printf 'b\r\nq=union sel\r\n4\r\nect \r\n0\r\n\r\n' | \
+code=$(printf 'b\r\nq=union sel\r\n4\r\nect \r\n0\r\n\r\n' |
   curl -sk -o /dev/null -w "%{http_code}" \
-  -X POST -H "Transfer-Encoding: chunked" \
-  --data-binary @- "${BASE}/" --max-time 10) || code="ERR"
+    -X POST -H "Transfer-Encoding: chunked" \
+    --data-binary @- "${BASE}/" --max-time 10) || code="ERR"
 printf "    chunked-sqli-split                        -> HTTP %s\n" "${code}"
 
 echo "  XSS split across chunks..."
-code=$(printf '9\r\nq=<script\r\na\r\n>alert(1)\r\n0\r\n\r\n' | \
+code=$(printf '9\r\nq=<script\r\na\r\n>alert(1)\r\n0\r\n\r\n' |
   curl -sk -o /dev/null -w "%{http_code}" \
-  -X POST -H "Transfer-Encoding: chunked" \
-  --data-binary @- "${BASE}/" --max-time 10) || code="ERR"
+    -X POST -H "Transfer-Encoding: chunked" \
+    --data-binary @- "${BASE}/" --max-time 10) || code="ERR"
 printf "    chunked-xss-split                         -> HTTP %s\n" "${code}"
 
 echo "  Path traversal split across chunks..."
-code=$(printf 'a\r\nfile=../../\r\ne\r\netc/passwd\x00\r\n0\r\n\r\n' | \
+code=$(printf 'a\r\nfile=../../\r\ne\r\netc/passwd\x00\r\n0\r\n\r\n' |
   curl -sk -o /dev/null -w "%{http_code}" \
-  -X POST -H "Transfer-Encoding: chunked" \
-  --data-binary @- "${BASE}/" --max-time 10) || code="ERR"
+    -X POST -H "Transfer-Encoding: chunked" \
+    --data-binary @- "${BASE}/" --max-time 10) || code="ERR"
 printf "    chunked-traversal-split                   -> HTTP %s\n" "${code}"
 
 echo "  Content-Length + Transfer-Encoding conflict (smuggling probe)..."
